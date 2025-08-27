@@ -7,8 +7,11 @@ export interface ToolExecutionOptions {
   };
 }
 
+type ToolExecutor = (params: Record<string, any>) => Promise<any>;
+
 class ToolCoordinator {
   private static instance: ToolCoordinator;
+  private registry: Map<string, ToolExecutor> = new Map();
 
   static getInstance(): ToolCoordinator {
     if (!ToolCoordinator.instance) {
@@ -17,7 +20,14 @@ class ToolCoordinator {
     return ToolCoordinator.instance;
   }
 
-  // Placeholder for real MCP tool invocation
+  registerTool(toolName: string, executor: ToolExecutor): void {
+    this.registry.set(toolName, executor);
+  }
+
+  hasTool(toolName: string): boolean {
+    return this.registry.has(toolName);
+  }
+
   async executeTool(toolName: string, parameters: Record<string, any>, options: ToolExecutionOptions = {}): Promise<any> {
     const timeoutMs = options.timeoutMs ?? 30_000;
     const retryCfg = options.retry ?? { maxAttempts: 1, backoff: 'linear', initialDelayMs: 300 };
@@ -25,13 +35,14 @@ class ToolCoordinator {
 
     let attempt = 0;
     let delay = initialDelayMs;
-    // naive retry loop
-    // In production, classify errors into retryable/non-retryable
-    // and invoke real MCP tool dispatcher.
+
     while (attempt < retryCfg.maxAttempts) {
       attempt += 1;
       try {
-        const result = await this.runWithTimeout(this.mockInvoke(toolName, parameters), timeoutMs);
+        const execPromise = this.registry.has(toolName)
+          ? this.registry.get(toolName)!(parameters)
+          : this.mockInvoke(toolName, parameters);
+        const result = await this.runWithTimeout(execPromise, timeoutMs);
         return { ok: true, attempt, result };
       } catch (err) {
         if (attempt >= retryCfg.maxAttempts) {
@@ -43,7 +54,6 @@ class ToolCoordinator {
         }
       }
     }
-    // unreachable
     return { ok: false };
   }
 
@@ -54,7 +64,6 @@ class ToolCoordinator {
     ]);
   }
 
-  // Mock executor - replace with real tool dispatch
   private async mockInvoke(toolName: string, parameters: Record<string, any>): Promise<any> {
     await new Promise((r) => setTimeout(r, 300));
     return { tool: toolName, parameters, success: true };

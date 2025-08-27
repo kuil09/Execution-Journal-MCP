@@ -40,10 +40,12 @@
   - [x] Cross-session state recovery
 
 - [ ] **Tool Coordinator** (`src/core/tool-coordinator.ts`)
-  - [ ] Real MCP tool discovery and invocation
-  - [ ] Tool result validation and error handling
-  - [ ] Retry logic with exponential backoff
-  - [ ] Tool timeout management
+  - [ ] Define tool registry/catalog and registration API
+  - [ ] Implement real MCP tool dispatch (lookup by `tool_name`)
+  - [ ] Result validation with Zod schemas (per-tool contracts)
+  - [ ] Error taxonomy (retryable / non-retryable / requires-intervention)
+  - [ ] Configurable timeouts and retry/backoff parameters
+  - [ ] Structured logging for tool calls (start/end/duration/error)
 
 ### Phase 4: AI-Directed Planning & Execution Control (HIGH PRIORITY)
 - [x] **AI-Directed Plan Management**
@@ -59,40 +61,58 @@
   - [x] Execution state management (paused, cancelled, etc.)
 
 - [ ] **Advanced Plan Structures**
-  - [ ] DAG-based workflow support with dependencies
-  - [ ] Conditional execution logic
-  - [ ] Parallel step execution
-  - [ ] Compensation strategy definition
+  - [ ] `src/core/execution-scheduler.ts` (topological sort executor)
+  - [ ] Parallel execution with worker limit (configurable concurrency)
+  - [ ] Conditional branches (predicate-based step enablement)
+  - [ ] Step-level timeout/cancellation tokens propagation
+  - [ ] Respect `depends_on` ordering and failure propagation rules
+  - [ ] Compensation strategy definition (ordering: reverse dependency)
 
 - [ ] **Context Management**
-  - [ ] `save_execution_context` tool
+  - [ ] `src/core/context-store.ts` with snapshot/versioning
+  - [ ] Persist plan snapshot at execution start (immutable reference)
+  - [ ] `save_execution_context` tool (merge/update strategy)
   - [ ] `load_execution_context` tool  
-  - [ ] Context variables and state persistence
-  - [ ] Cross-session continuity testing
+  - [ ] Cross-session continuity testing (restart recovery)
+
+- [ ] **Type System Cleanup**
+  - [ ] Introduce `src/types/plan.ts` (Plan/Step Zod schemas)
+  - [ ] Introduce `src/types/execution.ts` (Execution/State/Events)
+  - [ ] Validate `save_plan` inputs against Zod (cycle, duplicate id, bad deps)
+  - [ ] Validate `tool_name` existence in Tool Coordinator registry
+
+- [ ] **State Machine**
+  - [ ] `src/core/state-machine.ts` allowed transitions table
+  - [ ] Enforce transitions in manager/repository updates
+
+- [ ] **Storage Enhancements**
+  - [ ] Add `deleted_at` to `plans` (soft delete)
+  - [ ] `list_plans` include usage count and last execution time (optional)
+  - [ ] Lightweight migration script to add new columns
 
 ### Phase 5: Advanced Features & Production Readiness (MEDIUM PRIORITY)
 - [ ] **Compensation System**
-  - [ ] Automatic rollback tool generation
-  - [ ] Manual compensation step definition
-  - [ ] Partial failure recovery strategies
+  - [ ] Manual compensation flow patterns documentation
+  - [ ] Compensation retries/backoff policy and logging
+  - [ ] Partial failure recovery strategies (resume from failure/branch)
 
 - [ ] **Monitoring & Observability**
-  - [ ] Winston logger integration
-  - [ ] Execution metrics and timing
-  - [ ] Error tracking and alerting
-  - [ ] Performance monitoring
+  - [ ] Winston logger integration (`src/core/logger.ts`)
+  - [ ] Metrics: success rate, retries, durations, compensation ratio
+  - [ ] Error tracking and alerting hooks (pluggable)
+  - [ ] Performance monitoring (bottleneck detection)
 
 - [ ] **Testing**
-  - [ ] Unit tests for all SAGA components
-  - [ ] Integration tests for tool chains
-  - [ ] End-to-end scenario testing
-  - [ ] Failure recovery testing
+  - [ ] Unit: repositories, coordinator, state transitions
+  - [ ] Integration: pause/resume/cancel, failure→compensation
+  - [ ] E2E: DAG dependencies, parallelism, timeouts, retries
+  - [ ] Regression tests for deletion guards and FK constraints
 
 ### Phase 6: Production Readiness (LOW PRIORITY)
 - [ ] **Documentation**
   - [ ] API documentation with MCP protocol details
-  - [ ] AI usage examples and tutorials
-  - [ ] Best practices guide for AI agents
+  - [ ] AI usage examples and tutorials (sequential/DAG/compensation)
+  - [ ] Best practices guide for AI agents (execution support model)
   - [ ] Troubleshooting guide
 
 - [ ] **Optimization**

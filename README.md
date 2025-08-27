@@ -49,6 +49,54 @@ npm run start:http          # HTTP Stream transport on port 8080
 4) If a critical step fails, call your compensation tools and then `record_compensation`.
 5) Optionally pause/resume/cancel.
 
+## Using the Saga Hub Tool (Single Entry)
+- Public tool exposed: `saga`
+- Actions supported: `save_plan`, `list_plans`, `execute`, `status`, `pause`, `resume`, `cancel`, `delete_plan`, `record_compensation`
+
+Examples
+
+Save a plan
+```json
+{
+  "action": "save_plan",
+  "plan": {
+    "name": "Demo Plan",
+    "steps": [
+      { "id": "s1", "tool_name": "echo", "parameters": { "msg": "hello" } },
+      { "id": "s2", "tool_name": "echo", "parameters": { "msg": "world" }, "depends_on": ["s1"] }
+    ]
+  }
+}
+```
+
+Execute a saved plan
+```json
+{ "action": "execute", "plan_id": "<plan_id>", "execution_options": { "concurrency": 1 } }
+```
+
+Check status (with step details)
+```json
+{ "action": "status", "execution_id": "<exec_id>", "include_step_details": true }
+```
+
+Pause / Resume / Cancel
+```json
+{ "action": "pause",  "execution_id": "<exec_id>" }
+{ "action": "resume", "execution_id": "<exec_id>" }
+{ "action": "cancel", "execution_id": "<exec_id>" }
+```
+
+List / Delete plans
+```json
+{ "action": "list_plans", "pagination": { "limit": 20 } }
+{ "action": "delete_plan", "plan_id": "<plan_id>" }
+```
+
+Record compensation (AI-driven)
+```json
+{ "action": "record_compensation", "execution_id": "<exec_id>", "record": { "step_id": "s2", "reason": "manual rollback" } }
+```
+
 ## Project Structure
 
 ```

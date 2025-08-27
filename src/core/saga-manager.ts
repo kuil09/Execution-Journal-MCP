@@ -2,10 +2,12 @@ import { v4 as uuidv4 } from "uuid";
 import { PlanRepository } from "../storage/plan-repository.js";
 import { SagaRepository } from "../storage/saga-repository.js";
 import { toolCoordinator } from "./tool-coordinator.js";
+import { ExecutionScheduler } from "./execution-scheduler.js";
 
 export interface ExecuteOptions {
   auto_compensate?: boolean;
   pause_on_error?: boolean;
+  concurrency?: number;
 }
 
 class SagaManager {
@@ -49,67 +51,81 @@ class SagaManager {
   async executeAsync(id: string, options: ExecuteOptions = {}) {
     const data = this.sagaRepo.getWithSteps(id);
     if (!data) throw new Error(`SAGA not found: ${id}`);
-    const { instance, steps } = data as any;
+    const { instance } = data as any;
     const plan = this.planRepo.get(instance.plan_id) as any;
+    if (!plan) throw new Error(`Plan not found for execution: ${instance.plan_id}`);
+
+    // cycle validation
+    if (ExecutionScheduler.hasCycle(plan.steps || [])) {
+      this.sagaRepo.update({ id, status: "failed", error: "Plan has cyclic dependencies", updated_at: new Date().toISOString() });
+      return;
+    }
+
     const now = new Date().toISOString();
     this.sagaRepo.update({ id, status: "running", started_at: data.instance.started_at ?? now, updated_at: now });
 
+    const scheduler = new ExecutionScheduler(
+      (plan.steps || []).map((s: any) => ({ id: s.id, tool_name: s.tool_name, parameters: s.parameters, depends_on: s.depends_on })),
+      { concurrency: Math.max(1, options.concurrency ?? 1) }
+    );
+
     let failed = false;
-    let paused = false;
 
-    // Skip steps already completed
-    const remaining = steps.filter((s: any) => s.status !== "completed");
-
-    for (const step of remaining) {
-      const start = new Date().toISOString();
-      this.sagaRepo.upsertStep({ ...step, status: "running", started_at: start });
-      this.sagaRepo.update({ id, current_step: step.step_id, updated_at: new Date().toISOString() });
-      try {
-        // Get step definition (parameters, retry_policy)
-        const stepDef = plan?.steps?.find((ps: any) => ps.id === step.step_id) || {};
-        const parameters = stepDef.parameters ?? {};
-        const retry_policy = stepDef.retry_policy ?? { max_attempts: 1, backoff_strategy: 'linear' };
-        const execRes = await toolCoordinator.executeTool(step.tool_name, parameters, {
-          timeoutMs: undefined,
-          retry: {
-            maxAttempts: retry_policy.max_attempts ?? 1,
-            backoff: (retry_policy.backoff_strategy ?? 'linear') as 'linear' | 'exponential',
-            initialDelayMs: 300,
-          },
-        });
-        const complete = new Date().toISOString();
-        this.sagaRepo.upsertStep({ ...step, status: "completed", started_at: start, completed_at: complete, result_json: JSON.stringify(execRes) });
-      } catch (err: any) {
-        failed = true;
-        this.sagaRepo.upsertStep({ ...step, status: "failed", error: err?.message || String(err) });
-        const update: any = { id, status: options.pause_on_error ? "paused" : "failed", error: err?.message || String(err), updated_at: new Date().toISOString() };
-        this.sagaRepo.update(update);
-        if (options.auto_compensate) {
-          // TODO: run compensation steps (AI-driven or future server-driven)
+    try {
+      await scheduler.run({
+        onStepStart: (stepId) => {
+          const stepRow = (data.steps as any[]).find((x) => x.step_id === stepId);
+          const started_at = new Date().toISOString();
+          this.sagaRepo.upsertStep({ ...stepRow, status: "running", started_at });
+          this.sagaRepo.update({ id, current_step: stepId, updated_at: new Date().toISOString() });
+        },
+        runStep: async (step) => {
+          const stepDef = plan.steps.find((ps: any) => ps.id === step.id) || {};
+          const retry_policy = stepDef.retry_policy ?? { max_attempts: 1, backoff_strategy: 'linear' };
+          const res = await toolCoordinator.executeTool(step.tool_name, step.parameters ?? {}, {
+            retry: {
+              maxAttempts: retry_policy.max_attempts ?? 1,
+              backoff: (retry_policy.backoff_strategy ?? 'linear') as 'linear' | 'exponential',
+              initialDelayMs: 300,
+            }
+          });
+          const start = (data.steps as any[]).find((x) => x.step_id === step.id)?.started_at;
+          this.sagaRepo.upsertStep({
+            saga_id: id,
+            step_id: step.id,
+            name: stepDef.name,
+            tool_name: step.tool_name,
+            status: "completed",
+            started_at: start ?? new Date().toISOString(),
+            completed_at: new Date().toISOString(),
+            result_json: JSON.stringify(res)
+          } as any);
+        },
+        onStepError: (stepId, err) => {
+          failed = true;
+          const stepRow = (data.steps as any[]).find((x) => x.step_id === stepId);
+          this.sagaRepo.upsertStep({ ...stepRow, status: "failed", error: err?.message || String(err) });
+          this.sagaRepo.update({ id, status: options.pause_on_error ? "paused" : "failed", error: err?.message || String(err), updated_at: new Date().toISOString() });
         }
-        if (options.pause_on_error) {
-          paused = true;
-          break;
-        }
-        break;
-      }
+      });
+    } catch (e) {
+      // scheduler throws first error; already recorded in onStepError
     }
 
     const finishedAt = new Date().toISOString();
+    const current = this.sagaRepo.get(id);
+    if (!current) return;
 
-    if (paused) {
-      // Do not mark completed
+    if (current.status === "paused") {
       this.sagaRepo.update({ id, updated_at: finishedAt, current_step: "paused" as any });
       return;
     }
 
-    if (failed) {
-      // Already marked as failed above; ensure current_step reflects end
+    if (failed || current.status === "failed") {
       this.sagaRepo.update({ id, updated_at: finishedAt, current_step: "failed" as any });
       return;
     }
 
-    // Only mark completed if no failures occurred
     this.sagaRepo.update({ id, status: "completed", completed_at: finishedAt, updated_at: finishedAt, current_step: "finished" });
   }
 
@@ -126,7 +142,6 @@ class SagaManager {
     const data = this.sagaRepo.get(id);
     if (!data) throw new Error(`SAGA not found: ${id}`);
     if (data.status !== "paused") return { id, status: data.status };
-    // Fire-and-forget resume; executeAsync will skip completed steps
     this.executeAsync(id, options).catch(() => {});
     return { id, status: "running" };
   }
