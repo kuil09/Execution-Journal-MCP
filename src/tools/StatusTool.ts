@@ -1,5 +1,6 @@
 import { MCPTool } from "mcp-framework";
 import { z } from "zod";
+import { sagaManager } from "../core/saga-manager.js";
 
 class StatusTool extends MCPTool<{
   execution_id: string;
@@ -21,33 +22,31 @@ class StatusTool extends MCPTool<{
 
   async execute(input: { execution_id: string; include_step_details?: boolean }) {
     try {
-      // For now, return a mock response since we don't have the actual status method
-      const mockStatus = {
-        execution_id: input.execution_id,
-        status: "running",
-        progress: "2/5 steps completed",
-        current_step: "book_hotel",
-        started_at: new Date().toISOString(),
-        steps: [
-          { id: "download_data", name: "Download Data", status: "completed", tool: "download_files" },
-          { id: "book_hotel", name: "Book Hotel", status: "running", tool: "book_hotel" },
-          { id: "book_car", name: "Book Car", status: "pending", tool: "book_car" },
-          { id: "book_activities", name: "Book Activities", status: "pending", tool: "book_activities" },
-          { id: "send_confirmation", name: "Send Confirmation", status: "pending", tool: "send_email" }
-        ]
-      };
+      const sagaStatus = sagaManager.getSAGA(input.execution_id);
       
-      let statusText = `Execution Status: ${mockStatus.execution_id}
+      if (!sagaStatus) {
+        return {
+          content: [{
+            type: "text",
+            text: `Execution not found: ${input.execution_id}`
+          }]
+        };
+      }
+      
+      let statusText = `Execution Status: ${sagaStatus.execution_id}
 
-Status: ${mockStatus.status}
-Progress: ${mockStatus.progress}
-Current Step: ${mockStatus.current_step}
-Started: ${mockStatus.started_at}`;
+Plan: ${sagaStatus.plan_name || sagaStatus.plan_id}
+Status: ${sagaStatus.status}
+Progress: ${sagaStatus.progress}
+Current Step: ${sagaStatus.current_step || 'N/A'}
+Started: ${sagaStatus.started_at || 'Not started'}
+${sagaStatus.completed_at ? `Completed: ${sagaStatus.completed_at}` : ''}
+${sagaStatus.error ? `Error: ${sagaStatus.error}` : ''}`;
 
-      if (input.include_step_details) {
+      if (input.include_step_details && sagaStatus.steps) {
         statusText += `\n\nStep Details:
-${mockStatus.steps.map((step: any, index: number) => 
-  `${index + 1}. ${step.name} (${step.tool}) - ${step.status}`
+${sagaStatus.steps.map((step: any, index: number) => 
+  `${index + 1}. ${step.name || step.step_id} (${step.tool_name}) - ${step.status}${step.error ? ` [Error: ${step.error}]` : ''}`
 ).join('\n')}`;
       }
 

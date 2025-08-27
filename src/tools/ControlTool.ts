@@ -1,5 +1,6 @@
 import { MCPTool } from "mcp-framework";
 import { z } from "zod";
+import { sagaManager } from "../core/saga-manager.js";
 
 class ControlTool extends MCPTool<{
   action: "pause" | "resume" | "cancel";
@@ -26,11 +27,14 @@ class ControlTool extends MCPTool<{
 
   async execute(input: { action: "pause" | "resume" | "cancel"; execution_id: string; execution_options?: any }) {
     try {
+      let result;
       let resultText = "";
       
       switch (input.action) {
         case "pause":
-          resultText = `Execution ${input.execution_id} paused successfully.
+          result = sagaManager.pauseSAGA(input.execution_id);
+          resultText = `Execution ${result.id} paused successfully.
+Current Status: ${result.status}
 
 Note: This is a tool execution planning system, not the MSA Saga pattern.
 - Execution is paused but not rolled back
@@ -40,7 +44,9 @@ Note: This is a tool execution planning system, not the MSA Saga pattern.
           break;
           
         case "resume":
-          resultText = `Execution ${input.execution_id} resumed successfully.
+          result = sagaManager.resumeSAGA(input.execution_id, input.execution_options || {});
+          resultText = `Execution ${result.id} resumed successfully.
+Current Status: ${result.status}
 
 Options: ${JSON.stringify(input.execution_options || {}, null, 2)}
 
@@ -52,7 +58,9 @@ Note: This is a tool execution planning system, not the MSA Saga pattern.
           break;
           
         case "cancel":
-          resultText = `Execution ${input.execution_id} cancelled successfully.
+          result = sagaManager.cancelSAGA(input.execution_id);
+          resultText = `Execution ${result.id} cancelled successfully.
+Current Status: ${result.status}
 
 Note: This is a tool execution planning system, not the MSA Saga pattern.
 - Execution is stopped but not automatically rolled back

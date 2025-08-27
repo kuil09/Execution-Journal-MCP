@@ -1,5 +1,7 @@
 import { MCPTool } from "mcp-framework";
 import { z } from "zod";
+import { PlanRepository, StoredPlan } from "../storage/plan-repository.js";
+import { v4 as uuidv4 } from "uuid";
 
 class SavePlanTool extends MCPTool<{
   plan: {
@@ -19,6 +21,7 @@ class SavePlanTool extends MCPTool<{
 }> {
   name = "save_plan";
   description = "Save a tool execution plan with contextual dependencies";
+  private planRepo = new PlanRepository();
 
   schema = {
     plan: {
@@ -29,6 +32,7 @@ class SavePlanTool extends MCPTool<{
           id: z.string().describe("Unique identifier for the step"),
           name: z.string().describe("Human-readable name for the step"),
           tool: z.string().describe("Tool to be called"),
+          tool_name: z.string().describe("Tool name (alias for tool field)").optional(),
           parameters: z.record(z.any()).describe("Parameters for the tool"),
           cancellation: z.object({
             tool: z.string().describe("Tool to call for cancellation"),
@@ -42,8 +46,23 @@ class SavePlanTool extends MCPTool<{
 
   async execute(input: { plan: any }) {
     try {
-      // For now, return a mock response since we don't have the actual savePlan method
-      const planId = `plan_${Date.now().toString(36)}`;
+      const planId = `plan_${uuidv4()}`;
+      const now = new Date().toISOString();
+      
+      // Normalize steps to ensure tool_name field exists
+      const normalizedSteps = input.plan.steps.map((step: any) => ({
+        ...step,
+        tool_name: step.tool_name || step.tool // Ensure tool_name is set
+      }));
+      
+      const storedPlan: StoredPlan = {
+        plan_id: planId,
+        name: input.plan.name,
+        steps: normalizedSteps,
+        created_at: now
+      };
+      
+      this.planRepo.save(storedPlan);
       
       return {
         content: [{

@@ -1,5 +1,6 @@
 import { MCPTool } from "mcp-framework";
 import { z } from "zod";
+import { sagaManager } from "../core/saga-manager.js";
 
 class ExecutePlanTool extends MCPTool<{
   plan_id: string;
@@ -29,15 +30,21 @@ class ExecutePlanTool extends MCPTool<{
 
   async execute(input: { plan_id: string; execution_options?: any }) {
     try {
-      // For now, return a mock response since we don't have the actual execute method
-      const executionId = `exec_${Date.now().toString(36)}`;
+      const context = input.execution_options?.context || {};
+      const execution = sagaManager.createSAGA(input.plan_id, context);
+      
+      // Start execution asynchronously
+      sagaManager.executeAsync(execution.id, {
+        pause_on_error: input.execution_options?.pause_on_error ?? true,
+        concurrency: input.execution_options?.concurrency ?? 1
+      }).catch(() => {}); // Let saga manager handle errors
       
       return {
         content: [{
           type: "text",
           text: `Plan execution started successfully!
 
-Execution ID: ${executionId}
+Execution ID: ${execution.id}
 Plan ID: ${input.plan_id}
 Options: ${JSON.stringify(input.execution_options || {}, null, 2)}
 
