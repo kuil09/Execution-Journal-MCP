@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { PlanRepository } from "../storage/plan-repository.js";
 import { SagaRepository } from "../storage/saga-repository.js";
+import { toolCoordinator } from "./tool-coordinator.js";
 
 export interface ExecuteOptions {
   auto_compensate?: boolean;
@@ -48,7 +49,8 @@ class SagaManager {
   async executeAsync(id: string, options: ExecuteOptions = {}) {
     const data = this.sagaRepo.getWithSteps(id);
     if (!data) throw new Error(`SAGA not found: ${id}`);
-    const { steps } = data;
+    const { instance, steps } = data as any;
+    const plan = this.planRepo.get(instance.plan_id) as any;
     const now = new Date().toISOString();
     this.sagaRepo.update({ id, status: "running", started_at: data.instance.started_at ?? now, updated_at: now });
 
@@ -63,17 +65,27 @@ class SagaManager {
       this.sagaRepo.upsertStep({ ...step, status: "running", started_at: start });
       this.sagaRepo.update({ id, current_step: step.step_id, updated_at: new Date().toISOString() });
       try {
-        // TODO: Integrate with actual tool executor
-        await new Promise((r) => setTimeout(r, 500));
+        // Get step definition (parameters, retry_policy)
+        const stepDef = plan?.steps?.find((ps: any) => ps.id === step.step_id) || {};
+        const parameters = stepDef.parameters ?? {};
+        const retry_policy = stepDef.retry_policy ?? { max_attempts: 1, backoff_strategy: 'linear' };
+        const execRes = await toolCoordinator.executeTool(step.tool_name, parameters, {
+          timeoutMs: undefined,
+          retry: {
+            maxAttempts: retry_policy.max_attempts ?? 1,
+            backoff: (retry_policy.backoff_strategy ?? 'linear') as 'linear' | 'exponential',
+            initialDelayMs: 300,
+          },
+        });
         const complete = new Date().toISOString();
-        this.sagaRepo.upsertStep({ ...step, status: "completed", started_at: start, completed_at: complete, result_json: JSON.stringify({ success: true }) });
+        this.sagaRepo.upsertStep({ ...step, status: "completed", started_at: start, completed_at: complete, result_json: JSON.stringify(execRes) });
       } catch (err: any) {
         failed = true;
         this.sagaRepo.upsertStep({ ...step, status: "failed", error: err?.message || String(err) });
         const update: any = { id, status: options.pause_on_error ? "paused" : "failed", error: err?.message || String(err), updated_at: new Date().toISOString() };
         this.sagaRepo.update(update);
         if (options.auto_compensate) {
-          // TODO: run compensation steps
+          // TODO: run compensation steps (AI-driven or future server-driven)
         }
         if (options.pause_on_error) {
           paused = true;

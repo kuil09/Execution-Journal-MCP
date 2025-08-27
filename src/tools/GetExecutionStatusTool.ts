@@ -70,8 +70,10 @@ class GetExecutionStatusTool extends MCPTool<GetExecutionStatusInput> {
           }
           
           if (step.completed_at) {
-            const duration = new Date(step.completed_at).getTime() - new Date(step.started_at).getTime();
-            statusText += `   Completed: ${step.completed_at} (${duration}ms)\n`;
+            const startedMs = step.started_at ? new Date(step.started_at).getTime() : undefined;
+            const completedMs = new Date(step.completed_at).getTime();
+            const duration = startedMs ? (completedMs - startedMs) : undefined;
+            statusText += `   Completed: ${step.completed_at}${duration !== undefined ? ` (${duration}ms)` : ''}\n`;
           }
           
           if (step.result) {
@@ -84,6 +86,12 @@ class GetExecutionStatusTool extends MCPTool<GetExecutionStatusInput> {
           
           statusText += '\n';
         });
+      }
+
+      // Compensation summary (from steps)
+      if (saga.steps?.some((s: any) => s.status === 'compensated')) {
+        const count = saga.steps.filter((s: any) => s.status === 'compensated').length;
+        statusText += `\n↩️ Compensation: ${count} step(s) marked as compensated.`;
       }
 
       // Next action suggestions
