@@ -1,14 +1,18 @@
 import Database from "better-sqlite3";
 import path from "node:path";
 import fs from "node:fs";
+import os from "node:os";
 
 let dbInstance: Database.Database | null = null;
 
 export function getDb(): Database.Database {
   if (dbInstance) return dbInstance;
-  const dataDir = path.resolve(process.cwd(), "data");
-  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  const dbPath = path.join(dataDir, "saga.db");
+  // Prefer env override; else use ~/.saga-mcp/data to avoid writing to '/data'
+  const baseDir = process.env.SAGA_DATA_DIR
+    ? path.resolve(process.env.SAGA_DATA_DIR)
+    : path.join(os.homedir(), ".saga-mcp", "data");
+  if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+  const dbPath = path.join(baseDir, "saga.db");
   const db = new Database(dbPath);
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");

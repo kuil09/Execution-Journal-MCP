@@ -1,10 +1,14 @@
 import { MCPServer } from "mcp-framework";
 
+// Import tools, prompts, and resources
+import SagaHubTool from "./tools/SagaHubTool.js";
+import SagaPlanningPrompt from "./prompts/SagaPlanningPrompt.js";
+import SagaDocumentationResource from "./resources/SagaDocumentationResource.js";
+import SagaExamplesResource from "./resources/SagaExamplesResource.js";
+
 // 명령행 인수 파싱
 const args = process.argv.slice(2);
 const transportType = args[0] || 'stdio';
-
-console.log(`🚀 Starting SAGA MCP Server with ${transportType} transport...`);
 
 let server: MCPServer;
 
@@ -39,37 +43,40 @@ switch (transportType) {
     break;
     
   default:
-    console.log(`
-❌ Invalid transport type: ${transportType}
-
-Available options:
-  - stdio    (default) - Standard input/output for Claude Desktop
-  - sse      - Server-Sent Events on port 8080
-  - http     - HTTP Stream on port 8080
-
-Usage:
-  npm start                    # Use stdio (default)
-  npm start stdio             # Use stdio
-  npm start sse               # Use SSE transport
-  npm start http              # Use HTTP Stream transport
-    `);
+    console.error(`Invalid transport type: ${transportType}`);
+    console.error(`Available options: stdio, sse, http`);
     process.exit(1);
 }
 
-// 서버 시작
-server.start().then(() => {
-  console.log(`✅ SAGA MCP Server started successfully with ${transportType} transport`);
-  
-  if (transportType !== 'stdio') {
-    console.log(`🌐 Server accessible at: http://localhost:8080`);
-    if (transportType === 'sse') {
-      console.log(`📡 SSE endpoint: http://localhost:8080/sse`);
-      console.log(`💬 Message endpoint: http://localhost:8080/messages`);
-    } else if (transportType === 'http') {
-      console.log(`📡 MCP endpoint: http://localhost:8080/mcp`);
-    }
+// Register tools, prompts, and resources
+// Note: MCP Framework registration methods may vary by version
+try {
+  // Try different registration methods based on MCP Framework version
+  if ('tool' in server) {
+    (server as any).tool(SagaHubTool);
+  } else if ('addTool' in server) {
+    (server as any).addTool(SagaHubTool);
   }
-}).catch((error) => {
-  console.error(`❌ Failed to start server:`, error);
+  
+  if ('prompt' in server) {
+    (server as any).prompt(SagaPlanningPrompt);
+  } else if ('addPrompt' in server) {
+    (server as any).addPrompt(SagaPlanningPrompt);
+  }
+  
+  if ('resource' in server) {
+    (server as any).resource(SagaDocumentationResource);
+    (server as any).resource(SagaExamplesResource);
+  } else if ('addResource' in server) {
+    (server as any).addResource(SagaDocumentationResource);
+    (server as any).addResource(SagaExamplesResource);
+  }
+} catch (error) {
+  // Silent registration - MCP Framework will handle errors
+}
+
+// 서버 시작
+server.start().catch((error) => {
+  console.error(`Failed to start server:`, error);
   process.exit(1);
 });
