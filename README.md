@@ -11,6 +11,10 @@ npm install
 # Build the project
 npm run build
 
+# Start server with different transport options
+npm start                    # stdio (default) - for Claude Desktop
+npm run start:sse           # SSE transport on port 8080
+npm run start:http          # HTTP Stream transport on port 8080
 ```
 
 ## Project Structure
@@ -137,11 +141,33 @@ Add this configuration to your Claude Desktop config file:
 }
 ```
 
+## Transport Options
+
+### stdio (Default)
+- **Use case**: Claude Desktop integration
+- **Command**: `npm start` or `npm run start:stdio`
+- **Features**: Standard input/output communication
+
+### SSE (Server-Sent Events)
+- **Use case**: Web applications, real-time updates
+- **Command**: `npm run start:sse`
+- **Port**: 8080
+- **Endpoints**: 
+  - `/sse` - SSE connection
+  - `/messages` - Message handling
+
+### HTTP Stream
+- **Use case**: HTTP-based clients, API integration
+- **Command**: `npm run start:http`
+- **Port**: 8080
+- **Endpoint**: `/mcp` - MCP protocol endpoint
+
 ## Building and Testing
 
 1. Make changes to your tools
 2. Run `npm run build` to compile
-3. The server will automatically load your tools on startup
+3. Choose your transport method and start the server
+4. The server will automatically load your tools on startup
 
 ## Learn More
 

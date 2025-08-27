@@ -1,5 +1,6 @@
 import { MCPTool } from "mcp-framework";
 import { z } from "zod";
+import { PlanRepository } from "../storage/plan-repository.js";
 
 interface PlanToolChainInput {
   goal: string;
@@ -13,16 +14,16 @@ interface PlanToolChainInput {
 
 class PlanToolChainTool extends MCPTool<PlanToolChainInput> {
   name = "plan_tool_chain";
-  description = "AI 목표를 기반으로 도구 실행 체인 계획 생성";
+  description = "Generate AI goal-based tool execution chain plans";
 
   schema = {
     goal: {
       type: z.string(),
-      description: "달성하고자 하는 목표",
+      description: "Goal to achieve",
     },
     available_tools: {
       type: z.array(z.string()).optional(),
-      description: "사용 가능한 도구 목록",
+      description: "List of available tools",
     },
     constraints: {
       type: z.object({
@@ -30,17 +31,17 @@ class PlanToolChainTool extends MCPTool<PlanToolChainInput> {
         timeout_minutes: z.number().optional(),
         parallel_allowed: z.boolean().optional(),
       }).optional(),
-      description: "실행 제약 조건",
+      description: "Execution constraints",
     },
   };
 
   async execute(input: PlanToolChainInput) {
     const { goal, available_tools = [], constraints = {} } = input;
     
-    // AI 목표 분석 및 도구 체인 생성 로직
+    // AI goal analysis and tool chain generation logic
     const planId = `plan_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     
-    // 간단한 예시 - 여행 예약 시나리오
+    // Simple example - travel booking scenario
     const steps = this.generateStepsForGoal(goal, available_tools);
     
     const plan = {
@@ -51,31 +52,35 @@ class PlanToolChainTool extends MCPTool<PlanToolChainInput> {
       risk_assessment: this.assessRisk(steps)
     };
     
+    // persist plan
+    const repo = new PlanRepository();
+    repo.save({ plan_id: planId, name: plan.name, steps, created_at: new Date().toISOString() });
+    
     return {
       content: [
         {
           type: "text",
-          text: `📋 도구 체인 계획이 생성되었습니다!\n\n` +
+          text: `📋 Tool chain plan has been generated!\n\n` +
                 `Plan ID: ${planId}\n` +
-                `목표: ${goal}\n` +
-                `단계 수: ${steps.length}\n` +
-                `예상 소요시간: ${plan.estimated_duration}\n\n` +
-                `계획 단계:\n${steps.map((step: any, i: number) => `${i+1}. ${step.name || step.tool_name}`).join('\n')}\n\n` +
-                `다음 단계: execute_tool_chain 도구로 이 계획을 실행하세요.`
+                `Goal: ${goal}\n` +
+                `Number of steps: ${steps.length}\n` +
+                `Estimated duration: ${plan.estimated_duration}\n\n` +
+                `Plan steps:\n${steps.map((step: any, i: number) => `${i+1}. ${step.name || step.tool_name}`).join('\n')}\n\n` +
+                `Next step: Execute this plan using the execute_tool_chain tool.`
         }
       ]
     };
   }
 
   private generateStepsForGoal(goal: string, available_tools: string[]) {
-    // 간단한 휴리스틱 기반 계획 생성
-    // 실제로는 더 정교한 AI 기반 계획 생성 로직 필요
+    // Simple heuristic-based plan generation
+    // In practice, more sophisticated AI-based plan generation logic is needed
     
-    if (goal.includes('여행') || goal.includes('travel') || goal.includes('출장')) {
+    if (goal.includes('travel') || goal.includes('business_trip')) {
       return [
         {
           id: 'search_flights',
-          name: '항공편 검색',
+          name: 'Flight Search',
           tool_name: available_tools.find(t => t.includes('flight')) || 'flight_search',
           parameters: {},
           compensation: {
@@ -86,7 +91,7 @@ class PlanToolChainTool extends MCPTool<PlanToolChainInput> {
         },
         {
           id: 'book_hotel',
-          name: '호텔 예약',
+          name: 'Hotel Booking',
           tool_name: available_tools.find(t => t.includes('hotel')) || 'hotel_booking',
           parameters: {},
           depends_on: ['search_flights'],
@@ -98,7 +103,7 @@ class PlanToolChainTool extends MCPTool<PlanToolChainInput> {
         },
         {
           id: 'reserve_transport',
-          name: '교통수단 예약',
+          name: 'Transport Reservation',
           tool_name: available_tools.find(t => t.includes('transport')) || 'transport_booking',
           parameters: {},
           depends_on: ['search_flights']
@@ -106,31 +111,31 @@ class PlanToolChainTool extends MCPTool<PlanToolChainInput> {
       ];
     }
 
-    if (goal.includes('배포') || goal.includes('deploy')) {
+    if (goal.includes('deploy') || goal.includes('deployment')) {
       return [
         {
           id: 'run_tests',
-          name: '테스트 실행',
+          name: 'Run Tests',
           tool_name: 'run_tests',
           parameters: {}
         },
         {
           id: 'build_project',
-          name: '프로젝트 빌드',
+          name: 'Build Project',
           tool_name: 'build_project',
           parameters: {},
           depends_on: ['run_tests']
         },
         {
           id: 'deploy_staging',
-          name: '스테이징 배포',
+          name: 'Deploy to Staging',
           tool_name: 'deploy_staging',
           parameters: {},
           depends_on: ['build_project']
         },
         {
           id: 'deploy_production',
-          name: '프로덕션 배포',
+          name: 'Deploy to Production',
           tool_name: 'deploy_production',
           parameters: {},
           depends_on: ['deploy_staging']
@@ -138,7 +143,7 @@ class PlanToolChainTool extends MCPTool<PlanToolChainInput> {
       ];
     }
     
-    // 기본 단일 단계 계획
+    // Default single step plan
     return [
       {
         id: 'execute_goal',
@@ -150,7 +155,7 @@ class PlanToolChainTool extends MCPTool<PlanToolChainInput> {
   }
 
   private calculateDuration(steps: any[]): string {
-    return `약 ${steps.length * 2}분`;
+    return `approximately ${steps.length * 2} minutes`;
   }
 
   private assessRisk(steps: any[]): 'low' | 'medium' | 'high' {
