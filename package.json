@@ -1,40 +1,38 @@
 {
-  "name": "saga-mcp-server",
+  "name": "tool-execution-planner",
   "version": "0.0.1",
-  "description": "saga-mcp-server MCP server",
   "type": "module",
+  "description": "Tool Execution Planning & Cancellation System - MCP server for managing tool call sequences with contextual dependencies",
+  "main": "dist/index.js",
   "bin": {
-    "saga-mcp-server": "./dist/index.js"
+    "tool-execution-planner": "./dist/index.js"
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "clean": "rm -rf dist",
     "build": "npm run clean && tsc && mcp-build",
-    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
     "start": "node dist/index.js",
-    "start:stdio": "node dist/index.js stdio",
-    "start:sse": "node dist/index.js sse",
-    "start:http": "node dist/index.js http",
-    "dev": "npm run build && npm run start",
-    "dev:sse": "npm run build && npm run start:sse",
-    "dev:http": "npm run build && npm run start:http"
+    "dev": "npm run build && npm start"
   },
   "dependencies": {
-    "better-sqlite3": "^12.2.0",
     "mcp-framework": "^0.2.2",
-    "uuid": "^11.1.0",
-    "winston": "^3.17.0",
-    "zod": "^3.25.76"
+    "better-sqlite3": "^9.4.3",
+    "uuid": "^10.0.0",
+    "winston": "^3.13.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^20.11.24",
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/node": "^22.10.2",
     "@types/uuid": "^10.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.7.2"
   },
-  "engines": {
-    "node": ">=18.19.0"
-  }
+  "keywords": [
+    "mcp",
+    "tool-execution",
+    "planning",
+    "cancellation",
+    "contextual-dependencies"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }

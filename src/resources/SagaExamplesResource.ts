@@ -1,151 +1,154 @@
 import { MCPResource } from "mcp-framework";
 
-class SagaExamplesResource extends MCPResource {
-  uri = "resource://saga/examples";
-  name = "SAGA Examples and Templates";
-  description = "Example SAGA plans and templates for common use cases";
+class ToolExecutionExamplesResource extends MCPResource {
+  uri = "resource://tool-execution/examples";
+  name = "Tool Execution Examples and Templates";
+  description = "Example tool execution plans and templates for common use cases with contextual dependencies";
   mimeType = "application/json";
 
   async read() {
     const examples = {
-      "database-migration": {
-        name: "Database Migration",
-        description: "Example of migrating data between databases with rollback capability",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences. YOU (AI) must handle failures and execute compensation actions manually.",
-        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system.",
+      "travel-planning": {
+        name: "Travel Planning with Contextual Dependencies",
+        description: "Example of planning a trip where hotel booking failure affects other bookings",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute cancellation actions manually.",
+        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system for managing contextual dependencies.",
+        contextual_dependencies: "If hotel booking fails, car rental and activity bookings should also be cancelled",
         ai_responsibilities: [
           "Monitor each tool call for failures",
-          "Call compensation tools when tool calls fail",
-          "Ensure data consistency through proper planning",
-          "Handle rollbacks manually"
+          "Call cancellation tools when tool calls fail",
+          "Understand how failures affect related tool calls",
+          "Handle cancellations manually based on context"
         ],
         steps: [
           {
-            id: "backup-source",
-            name: "Backup Source Database",
-            tool: "backup_database",
-            parameters: { source: "production_db" },
-            compensation: {
-              tool: "restore_database",
-              parameters: { target: "production_db", backup: "{{backup_id}}" }
+            id: "book-hotel",
+            name: "Book Hotel",
+            tool: "book_hotel",
+            parameters: { location: "Paris", dates: "2024-06-01 to 2024-06-07" },
+            cancellation: {
+              tool: "cancel_hotel",
+              parameters: { booking_id: "{{hotel_booking_id}}" }
             },
             note: "AI must monitor this tool call and handle failures"
           },
           {
-            id: "migrate-data",
-            name: "Migrate Data",
-            tool: "migrate_data",
-            parameters: { source: "production_db", target: "new_db" },
-            compensation: {
-              tool: "rollback_migration",
-              parameters: { target: "new_db" }
+            id: "book-car",
+            name: "Book Rental Car",
+            tool: "book_car",
+            parameters: { location: "Paris", dates: "2024-06-01 to 2024-06-07" },
+            cancellation: {
+              tool: "cancel_car",
+              parameters: { booking_id: "{{car_booking_id}}" }
             },
-            note: "If this tool call fails, AI must call compensation tools"
+            note: "If hotel booking fails, this should also be cancelled"
           },
           {
-            id: "verify-migration",
-            name: "Verify Migration",
-            tool: "verify_data_integrity",
-            parameters: { source: "production_db", target: "new_db" },
-            compensation: {
-              tool: "rollback_migration",
-              parameters: { target: "new_db" }
+            id: "book-activities",
+            name: "Book Activities",
+            tool: "book_activities",
+            parameters: { location: "Paris", dates: "2024-06-01 to 2024-06-07" },
+            cancellation: {
+              tool: "cancel_activities",
+              parameters: { booking_id: "{{activity_booking_id}}" }
             },
-            note: "AI must verify success and handle verification failures"
+            note: "If hotel or car booking fails, this should also be cancelled"
           }
         ]
       },
-      "file-processing": {
-        name: "File Processing Pipeline",
-        description: "Example of processing files with cleanup on failure",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences. YOU (AI) must handle failures and execute compensation actions manually.",
-        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system.",
+      "data-processing": {
+        name: "Data Processing Pipeline with Cleanup",
+        description: "Example of processing data with cleanup on failure",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute cancellation actions manually.",
+        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system for managing contextual dependencies.",
+        contextual_dependencies: "If data processing fails, downloaded files and temporary data should be cleaned up",
         ai_responsibilities: [
-          "Monitor file operations for failures",
+          "Monitor data operations for failures",
           "Clean up partial results when tool calls fail",
           "Ensure no orphaned files remain",
           "Handle cleanup operations manually"
         ],
         steps: [
           {
-            id: "download-files",
-            name: "Download Files",
+            id: "download-data",
+            name: "Download Data Files",
             tool: "download_files",
-            parameters: { url: "https://example.com/files.zip" },
-            compensation: {
+            parameters: { url: "https://example.com/data.zip" },
+            cancellation: {
               tool: "cleanup_files",
               parameters: { pattern: "*.zip" }
             },
             note: "AI must handle download failures and cleanup"
           },
           {
-            id: "extract-files",
-            name: "Extract Files",
-            tool: "extract_archive",
-            parameters: { archive: "files.zip" },
-            compensation: {
-              tool: "cleanup_files",
-              parameters: { pattern: "extracted/*" }
-            },
-            note: "AI must handle extraction failures and cleanup"
-          },
-          {
-            id: "process-files",
-            name: "Process Files",
+            id: "process-data",
+            name: "Process Data Files",
             tool: "process_files",
-            parameters: { directory: "extracted" },
-            compensation: {
+            parameters: { directory: "data" },
+            cancellation: {
               tool: "cleanup_files",
               parameters: { pattern: "processed/*" }
             },
-            note: "AI must handle processing failures and cleanup"
+            note: "If this fails, downloaded files should be cleaned up"
+          },
+          {
+            id: "upload-results",
+            name: "Upload Results",
+            tool: "upload_results",
+            parameters: { directory: "processed" },
+            cancellation: {
+              tool: "cleanup_files",
+              parameters: { pattern: "processed/*" }
+            },
+            note: "If this fails, processed files should be cleaned up"
           }
         ]
       },
-      "api-integration": {
-        name: "API Integration",
-        description: "Example of integrating multiple APIs with compensation",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences. YOU (AI) must handle failures and execute compensation actions manually.",
-        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system.",
+      "business-process": {
+        name: "Business Process with Contextual Dependencies",
+        description: "Example of business process where order failure affects inventory and shipping",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute cancellation actions manually.",
+        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system for managing contextual dependencies.",
+        contextual_dependencies: "If order processing fails, inventory updates and shipping preparations should be cancelled",
         ai_responsibilities: [
-          "Monitor API calls for failures",
-          "Rollback successful operations when later tool calls fail",
-          "Ensure data consistency across systems",
-          "Handle compensation operations manually"
+          "Monitor business operations for failures",
+          "Cancel related operations when tool calls fail",
+          "Ensure business consistency across systems",
+          "Handle cancellation operations manually"
         ],
         steps: [
           {
-            id: "create-user",
-            name: "Create User in CRM",
-            tool: "create_crm_user",
-            parameters: { userData: "{{user_data}}" },
-            compensation: {
-              tool: "delete_crm_user",
-              parameters: { userId: "{{crm_user_id}}" }
+            id: "create-order",
+            name: "Create Order",
+            tool: "create_order",
+            parameters: { customer_id: "{{customer_id}}", items: "{{items}}" },
+            cancellation: {
+              tool: "cancel_order",
+              parameters: { order_id: "{{order_id}}" }
             },
-            note: "AI must handle CRM creation failures"
+            note: "AI must handle order creation failures"
           },
           {
-            id: "setup-billing",
-            name: "Setup Billing Account",
-            tool: "create_billing_account",
-            parameters: { userId: "{{crm_user_id}}" },
-            compensation: {
-              tool: "cancel_billing_account",
-              parameters: { accountId: "{{billing_account_id}}" }
+            id: "update-inventory",
+            name: "Update Inventory",
+            tool: "update_inventory",
+            parameters: { order_id: "{{order_id}}" },
+            cancellation: {
+              tool: "restore_inventory",
+              parameters: { order_id: "{{order_id}}" }
             },
-            note: "If this tool call fails, AI must delete the CRM user"
+            note: "If order creation fails, this should not be executed"
           },
           {
-            id: "send-welcome",
-            name: "Send Welcome Email",
-            tool: "send_email",
-            parameters: { template: "welcome", userId: "{{crm_user_id}}" },
-            compensation: {
-              tool: "cancel_email",
-              parameters: { emailId: "{{email_id}}" }
+            id: "prepare-shipping",
+            name: "Prepare Shipping",
+            tool: "prepare_shipping",
+            parameters: { order_id: "{{order_id}}" },
+            cancellation: {
+              tool: "cancel_shipping",
+              parameters: { order_id: "{{order_id}}" }
             },
-            note: "If this tool call fails, AI must cancel billing and delete user"
+            note: "If order or inventory update fails, this should be cancelled"
           }
         ]
       }
@@ -161,4 +164,4 @@ class SagaExamplesResource extends MCPResource {
   }
 }
 
-export default SagaExamplesResource;
+export default ToolExecutionExamplesResource;

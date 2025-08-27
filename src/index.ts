@@ -1,10 +1,14 @@
 import { MCPServer } from "mcp-framework";
 
 // Import tools, prompts, and resources
-import SagaHubTool from "./tools/SagaHubTool.js";
-import SagaPlanningPrompt from "./prompts/SagaPlanningPrompt.js";
-import SagaDocumentationResource from "./resources/SagaDocumentationResource.js";
-import SagaExamplesResource from "./resources/SagaExamplesResource.js";
+import SavePlanTool from "./tools/SavePlanTool.js";
+import ExecutePlanTool from "./tools/ExecutePlanTool.js";
+import StatusTool from "./tools/StatusTool.js";
+import ControlTool from "./tools/ControlTool.js";
+import RecordCompensationTool from "./tools/RecordCompensationTool.js";
+import ToolExecutionPlanningPrompt from "./prompts/SagaPlanningPrompt.js";
+import ToolExecutionDocumentationResource from "./resources/SagaDocumentationResource.js";
+import ToolExecutionExamplesResource from "./resources/SagaExamplesResource.js";
 
 // 명령행 인수 파싱
 const args = process.argv.slice(2);
@@ -53,23 +57,31 @@ switch (transportType) {
 try {
   // Try different registration methods based on MCP Framework version
   if ('tool' in server) {
-    (server as any).tool(SagaHubTool);
+    (server as any).tool(SavePlanTool);
+    (server as any).tool(ExecutePlanTool);
+    (server as any).tool(StatusTool);
+    (server as any).tool(ControlTool);
+    (server as any).tool(RecordCompensationTool);
   } else if ('addTool' in server) {
-    (server as any).addTool(SagaHubTool);
+    (server as any).addTool(SavePlanTool);
+    (server as any).addTool(ExecutePlanTool);
+    (server as any).addTool(StatusTool);
+    (server as any).addTool(ControlTool);
+    (server as any).addTool(RecordCompensationTool);
   }
   
   if ('prompt' in server) {
-    (server as any).prompt(SagaPlanningPrompt);
+    (server as any).prompt(ToolExecutionPlanningPrompt);
   } else if ('addPrompt' in server) {
-    (server as any).addPrompt(SagaPlanningPrompt);
+    (server as any).addPrompt(ToolExecutionPlanningPrompt);
   }
   
   if ('resource' in server) {
-    (server as any).resource(SagaDocumentationResource);
-    (server as any).resource(SagaExamplesResource);
+    (server as any).resource(ToolExecutionDocumentationResource);
+    (server as any).resource(ToolExecutionExamplesResource);
   } else if ('addResource' in server) {
-    (server as any).addResource(SagaDocumentationResource);
-    (server as any).addResource(SagaExamplesResource);
+    (server as any).addResource(ToolExecutionDocumentationResource);
+    (server as any).addResource(ToolExecutionExamplesResource);
   }
 } catch (error) {
   // Silent registration - MCP Framework will handle errors
