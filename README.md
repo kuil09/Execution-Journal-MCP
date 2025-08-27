@@ -14,6 +14,11 @@ A Model Context Protocol (MCP) server built with mcp-framework.
 - Use pause/resume/cancel controls (coming) to manage long-running workflows.
 - Note: `delete_plan` will fail if any executions exist for the plan. Cancel or wait for completion first.
 
+### Compensation (AI-driven)
+- The server does not auto-compensate. AI decides when/how to compensate.
+- After invoking a compensation tool, call `record_compensation` to mark the affected step as compensated and log an event.
+- Compensation ordering, retries, and policies should be encoded in the plan and enforced by the AI agent.
+
 ### Current Limitations (Important)
 - Dependencies are stored but executed sequentially (no DAG scheduler yet).
 - Compensation steps are defined in plans but not auto-executed by the server.
@@ -41,8 +46,8 @@ npm run start:http          # HTTP Stream transport on port 8080
 1) Create/save a plan with explicit dependencies/compensation using `save_plan`.
 2) Execute with `execute_tool_chain` and retrieve the `execution_id`.
 3) Poll `get_execution_status` for progress and react to failures.
-4) If a critical step fails, call your compensation/cancel tools explicitly.
-5) Optionally pause/resume/cancel (tools to be added in Phase 4).
+4) If a critical step fails, call your compensation tools and then `record_compensation`.
+5) Optionally pause/resume/cancel.
 
 ## Project Structure
 
