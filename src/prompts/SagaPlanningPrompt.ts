@@ -32,8 +32,8 @@ class ToolExecutionPlanningPrompt extends MCPPrompt<ToolExecutionPlanningInput> 
   async generateMessages({ goal, complexity = "medium", domain = "general" }: ToolExecutionPlanningInput) {
     const complexityGuidance: Record<string, string> = {
       simple: "For simple operations, focus on 2-3 sequential tool calls with basic error handling.",
-      medium: "For medium complexity, consider tool call sequences and include cancellation logic.",
-      complex: "For complex operations, break down into logical phases and ensure comprehensive cancellation strategies."
+      medium: "For medium complexity, consider tool call sequences and include compensation logic.",
+      complex: "For complex operations, break down into logical phases and ensure comprehensive compensation strategies."
     };
 
     return [
@@ -41,22 +41,22 @@ class ToolExecutionPlanningPrompt extends MCPPrompt<ToolExecutionPlanningInput> 
         role: "system",
         content: {
           type: "text",
-          text: `You are a tool execution planning expert. Your role is to help create robust plans for executing sequences of tool calls that can handle failures gracefully through cancellation actions.
+          text: `You are a tool execution planning expert. Your role is to help create robust plans for executing sequences of tool calls that can handle failures gracefully through compensation actions.
 
 IMPORTANT: This system provides execution SUPPORT, not execution GUARANTEES. You (the AI) are responsible for:
-- Designing resilient plans with cancellation actions for each tool call
+- Designing resilient plans with compensation actions for each tool call
 - Detecting failures and deciding when to cancel the entire plan
-- Explicitly invoking cancellation tools
+- Explicitly invoking compensation tools
 - Monitoring execution status and handling errors
 - Ensuring data consistency through proper planning
 
 The system does NOT automatically:
 - Retry failed tool calls
-- Execute cancellation actions
+- Execute compensation actions
 - Handle rollbacks
 - Guarantee successful completion
 
-NOTE: This is NOT the MSA Saga pattern. This is a tool execution planning and cancellation system for managing contextual dependencies between tool calls.`
+NOTE: This is NOT the MSA Saga pattern. This is a tool execution planning and compensation system for managing contextual dependencies between tool calls.`
         }
       },
       {
@@ -74,19 +74,19 @@ ${complexityGuidance[complexity]}
 Please provide:
 1. A structured plan with clear tool call sequences
 2. Dependencies between tool calls (if any) - Note: Currently executed sequentially
-3. Cancellation actions for each tool call - YOU must execute these manually
+3. Compensation actions for each tool call - YOU must execute these manually
 4. Risk assessment and failure points
 5. JSON format for the plan structure
 6. Your monitoring and failure handling strategy
 
 CRITICAL REMINDERS:
 - This system provides tools and infrastructure for managing tool call sequences
-- Always include cancellation actions for every tool call
+- Always include compensation actions for every tool call
 - Plan for manual intervention when tool calls fail
 - Monitor execution status continuously
-- Be prepared to call cancellation tools explicitly
+- Be prepared to call compensation tools explicitly
 - This is NOT the MSA Saga pattern - it's a tool execution planning system
-- Focus on contextual dependencies: if one tool call fails, what other tool calls need to be cancelled?
+- Focus on contextual dependencies: if one tool call fails, what other tool calls need to be compensated?
 
 Remember: This system provides execution SUPPORT, not execution GUARANTEES. You must design robust plans and handle failures explicitly.`
         }

@@ -1,8 +1,8 @@
-# Tool Execution Planning & Cancellation System - Development TODO
+# Tool Execution Planning & Compensation System - Development TODO
 
 ## Project Overview
 
-This system is designed to help AI manage complex tool call sequences with contextual dependencies. It provides execution support for coordinating multiple tool calls and handling failures through manual cancellation actions.
+This system is designed to help AI manage complex tool call sequences with contextual dependencies. It provides execution support for coordinating multiple tool calls and handling failures through manual compensation actions.
 
 ## CRITICAL: Current System Limitations
 
@@ -11,8 +11,8 @@ This system is designed to help AI manage complex tool call sequences with conte
 ### What This System Actually Does
 - Helps AI plan and execute sequences of tool calls
 - Tracks execution progress and status
-- Provides tools for manual cancellation when failures occur
-- Records cancellation actions for audit trails
+- Provides tools for manual compensation when failures occur
+- Records compensation actions for audit trails
 - Manages contextual dependencies between related operations
 
 ### What This System Does NOT Do
@@ -23,11 +23,11 @@ This system is designed to help AI manage complex tool call sequences with conte
 
 ## AI Responsibilities
 
-1. **Plan Design**: Create robust plans with cancellation strategies
+1. **Plan Design**: Create robust plans with compensation strategies
 2. **Execution Monitoring**: Continuously monitor execution status
-3. **Failure Handling**: Detect failures and manually invoke cancellation tools
+3. **Failure Handling**: Detect failures and manually invoke compensation tools
 4. **Contextual Awareness**: Consider how tool failures affect related operations
-5. **Manual Cancellation**: Execute cancellation actions when needed
+5. **Manual Compensation**: Execute compensation actions when needed
 
 ## Completed Features
 
@@ -50,7 +50,7 @@ This system is designed to help AI manage complex tool call sequences with conte
 - 📋 Parallel tool execution
 - 📋 Enhanced monitoring and logging
 - 📋 Integration with external tool systems
-- 📋 Advanced cancellation strategies
+- 📋 Advanced compensation strategies
 
 ## Current Architecture
 
@@ -67,7 +67,7 @@ This system is designed to help AI manage complex tool call sequences with conte
 4. System tracks execution progress
 5. AI monitors status using `status` tool
 6. AI controls execution using `control` tool
-7. AI records cancellations using `record_compensation`
+7. AI records compensations using `record_compensation`
 
 ## Immediate Next Steps
 
@@ -88,10 +88,10 @@ This system is designed to help AI manage complex tool call sequences with conte
 ## Critical Warnings for AI Users
 
 1. **This is NOT the MSA Saga pattern** - No automatic rollback or distributed transaction guarantees
-2. **Manual Cancellation Required** - You must explicitly invoke cancellation tools when failures occur
+2. **Manual Compensation Required** - You must explicitly invoke compensation tools when failures occur
 3. **Contextual Dependencies** - Always consider how tool failures affect related operations
 4. **Execution Monitoring** - Continuously monitor execution status to detect failures early
-5. **Cancellation-First Design** - Design plans with cancellation strategies from the beginning
+5. **Compensation-First Design** - Design plans with compensation strategies from the beginning
 
 ## Technical Notes
 

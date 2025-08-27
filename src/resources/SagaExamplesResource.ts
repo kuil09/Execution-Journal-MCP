@@ -11,23 +11,23 @@ class ToolExecutionExamplesResource extends MCPResource {
       "travel-planning": {
         name: "Travel Planning with Contextual Dependencies",
         description: "Example of planning a trip where hotel booking failure affects other bookings",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute cancellation actions manually.",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute compensation actions manually.",
         note: "This is NOT the MSA Saga pattern - it's a tool execution planning system for managing contextual dependencies.",
-        contextual_dependencies: "If hotel booking fails, car rental and activity bookings should also be cancelled",
+        contextual_dependencies: "If hotel booking fails, car rental and activity bookings should also be compensated",
         ai_responsibilities: [
           "Monitor each tool call for failures",
-          "Call cancellation tools when tool calls fail",
+          "Call compensation tools when tool calls fail",
           "Understand how failures affect related tool calls",
-          "Handle cancellations manually based on context"
+          "Handle compensations manually based on context"
         ],
         steps: [
           {
             id: "book-hotel",
             name: "Book Hotel",
-            tool: "book_hotel",
+            tool_name: "book_hotel",
             parameters: { location: "Paris", dates: "2024-06-01 to 2024-06-07" },
-            cancellation: {
-              tool: "cancel_hotel",
+            compensation: {
+              tool_name: "cancel_hotel",
               parameters: { booking_id: "{{hotel_booking_id}}" }
             },
             note: "AI must monitor this tool call and handle failures"
@@ -35,31 +35,33 @@ class ToolExecutionExamplesResource extends MCPResource {
           {
             id: "book-car",
             name: "Book Rental Car",
-            tool: "book_car",
+            tool_name: "book_car",
             parameters: { location: "Paris", dates: "2024-06-01 to 2024-06-07" },
-            cancellation: {
-              tool: "cancel_car",
+            depends_on: ["book-hotel"],
+            compensation: {
+              tool_name: "cancel_car",
               parameters: { booking_id: "{{car_booking_id}}" }
             },
-            note: "If hotel booking fails, this should also be cancelled"
+            note: "If hotel booking fails, this should also be compensated"
           },
           {
             id: "book-activities",
             name: "Book Activities",
-            tool: "book_activities",
+            tool_name: "book_activities",
             parameters: { location: "Paris", dates: "2024-06-01 to 2024-06-07" },
-            cancellation: {
-              tool: "cancel_activities",
+            depends_on: ["book-hotel", "book-car"],
+            compensation: {
+              tool_name: "cancel_activities",
               parameters: { booking_id: "{{activity_booking_id}}" }
             },
-            note: "If hotel or car booking fails, this should also be cancelled"
+            note: "If hotel or car booking fails, this should also be compensated"
           }
         ]
       },
       "data-processing": {
         name: "Data Processing Pipeline with Cleanup",
         description: "Example of processing data with cleanup on failure",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute cancellation actions manually.",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute compensation actions manually.",
         note: "This is NOT the MSA Saga pattern - it's a tool execution planning system for managing contextual dependencies.",
         contextual_dependencies: "If data processing fails, downloaded files and temporary data should be cleaned up",
         ai_responsibilities: [
@@ -72,10 +74,10 @@ class ToolExecutionExamplesResource extends MCPResource {
           {
             id: "download-data",
             name: "Download Data Files",
-            tool: "download_files",
+            tool_name: "download_files",
             parameters: { url: "https://example.com/data.zip" },
-            cancellation: {
-              tool: "cleanup_files",
+            compensation: {
+              tool_name: "cleanup_files",
               parameters: { pattern: "*.zip" }
             },
             note: "AI must handle download failures and cleanup"
@@ -83,10 +85,10 @@ class ToolExecutionExamplesResource extends MCPResource {
           {
             id: "process-data",
             name: "Process Data Files",
-            tool: "process_files",
+            tool_name: "process_files",
             parameters: { directory: "data" },
-            cancellation: {
-              tool: "cleanup_files",
+            compensation: {
+              tool_name: "cleanup_files",
               parameters: { pattern: "processed/*" }
             },
             note: "If this fails, downloaded files should be cleaned up"
@@ -94,10 +96,10 @@ class ToolExecutionExamplesResource extends MCPResource {
           {
             id: "upload-results",
             name: "Upload Results",
-            tool: "upload_results",
+            tool_name: "upload_results",
             parameters: { directory: "processed" },
-            cancellation: {
-              tool: "cleanup_files",
+            compensation: {
+              tool_name: "cleanup_files",
               parameters: { pattern: "processed/*" }
             },
             note: "If this fails, processed files should be cleaned up"
@@ -107,23 +109,23 @@ class ToolExecutionExamplesResource extends MCPResource {
       "business-process": {
         name: "Business Process with Contextual Dependencies",
         description: "Example of business process where order failure affects inventory and shipping",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute cancellation actions manually.",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences with contextual dependencies. YOU (AI) must handle failures and execute compensation actions manually.",
         note: "This is NOT the MSA Saga pattern - it's a tool execution planning system for managing contextual dependencies.",
-        contextual_dependencies: "If order processing fails, inventory updates and shipping preparations should be cancelled",
+        contextual_dependencies: "If order processing fails, inventory updates and shipping preparations should be compensated",
         ai_responsibilities: [
           "Monitor business operations for failures",
           "Cancel related operations when tool calls fail",
           "Ensure business consistency across systems",
-          "Handle cancellation operations manually"
+          "Handle compensation operations manually"
         ],
         steps: [
           {
             id: "create-order",
             name: "Create Order",
-            tool: "create_order",
+            tool_name: "create_order",
             parameters: { customer_id: "{{customer_id}}", items: "{{items}}" },
-            cancellation: {
-              tool: "cancel_order",
+            compensation: {
+              tool_name: "cancel_order",
               parameters: { order_id: "{{order_id}}" }
             },
             note: "AI must handle order creation failures"
@@ -131,10 +133,11 @@ class ToolExecutionExamplesResource extends MCPResource {
           {
             id: "update-inventory",
             name: "Update Inventory",
-            tool: "update_inventory",
+            tool_name: "update_inventory",
             parameters: { order_id: "{{order_id}}" },
-            cancellation: {
-              tool: "restore_inventory",
+            depends_on: ["create-order"],
+            compensation: {
+              tool_name: "restore_inventory",
               parameters: { order_id: "{{order_id}}" }
             },
             note: "If order creation fails, this should not be executed"
@@ -142,13 +145,14 @@ class ToolExecutionExamplesResource extends MCPResource {
           {
             id: "prepare-shipping",
             name: "Prepare Shipping",
-            tool: "prepare_shipping",
+            tool_name: "prepare_shipping",
             parameters: { order_id: "{{order_id}}" },
-            cancellation: {
-              tool: "cancel_shipping",
+            depends_on: ["create-order", "update-inventory"],
+            compensation: {
+              tool_name: "cancel_shipping",
               parameters: { order_id: "{{order_id}}" }
             },
-            note: "If order or inventory update fails, this should be cancelled"
+            note: "If order or inventory update fails, this should be compensated"
           }
         ]
       }

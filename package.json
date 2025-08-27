@@ -2,7 +2,7 @@
   "name": "tool-execution-planner",
   "version": "0.0.1",
   "type": "module",
-  "description": "Tool Execution Planning & Cancellation System - MCP server for managing tool call sequences with contextual dependencies",
+  "description": "Tool Execution Planning & Compensation System - MCP server for managing tool call sequences with contextual dependencies",
   "main": "dist/index.js",
   "bin": {
     "tool-execution-planner": "./dist/index.js"
@@ -30,7 +30,7 @@
     "mcp",
     "tool-execution",
     "planning",
-    "cancellation",
+    "compensation",
     "contextual-dependencies"
   ],
   "author": "Your Name",

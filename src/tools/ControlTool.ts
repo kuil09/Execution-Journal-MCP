@@ -36,7 +36,7 @@ Note: This is a tool execution planning system, not the MSA Saga pattern.
 - Execution is paused but not rolled back
 - You can resume from the current state
 - Monitor the execution to understand why it was paused
-- Consider if cancellation is needed instead of just pausing`;
+- Consider if compensation is needed instead of just pausing`;
           break;
           
         case "resume":
@@ -56,8 +56,8 @@ Note: This is a tool execution planning system, not the MSA Saga pattern.
 
 Note: This is a tool execution planning system, not the MSA Saga pattern.
 - Execution is stopped but not automatically rolled back
-- You must manually execute cancellation actions for completed steps
-- Use record_compensation to log what was cancelled
+- You must manually execute compensation actions for completed steps
+- Use record_compensation to log what was compensated
 - Consider the impact on related operations`;
           break;
       }

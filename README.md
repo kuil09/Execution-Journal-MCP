@@ -1,22 +1,22 @@
-# Tool Execution Planning & Cancellation System
+# Tool Execution Planning & Compensation System
 
-A Model Context Protocol (MCP) server for managing tool call sequences with contextual dependencies. This system helps AI coordinate multiple tool calls and handle failures through manual cancellation actions.
+A Model Context Protocol (MCP) server for managing tool call sequences with contextual dependencies. This system helps AI coordinate multiple tool calls and handle failures through manual compensation actions.
 
 ## What This System Actually Does
 
 **This is NOT the MSA Saga pattern for distributed transactions.** Instead, this system manages "loose contextual connections" between tool calls. For example:
 
-- If a "travel booking" tool call fails, a "hat purchase" tool call that is contextually linked should also be cancelled
-- If a "database migration" fails, related "backup creation" and "notification sending" should be cancelled
-- The AI is responsible for detecting failures and manually invoking cancellation tools
+- If a "travel booking" tool call fails, a "hat purchase" tool call that is contextually linked should also be compensated
+- If a "database migration" fails, related "backup creation" and "notification sending" should be compensated
+- The AI is responsible for detecting failures and manually invoking compensation tools
 
 ## Core Concept: Execution Support, Not Execution Guarantee
 
 This system provides **execution support** for complex tool call sequences, not automatic execution guarantees. The AI must:
 
-- Design robust plans with proper cancellation strategies
+- Design robust plans with proper compensation strategies
 - Monitor execution status continuously
-- Handle failures manually by calling cancellation tools
+- Handle failures manually by calling compensation tools
 - Consider contextual dependencies between tool calls
 
 ## Available Tools
@@ -28,7 +28,7 @@ This system provides **execution support** for complex tool call sequences, not 
 ### Execution Control
 - **`status`** - Check execution status and progress
 - **`control`** - Pause, resume, or cancel executions
-- **`record_compensation`** - Log cancellation actions for audit trails
+  - **`record_compensation`** - Log compensation actions for audit trails
 
 ## Usage Examples
 
@@ -42,20 +42,21 @@ This system provides **execution support** for complex tool call sequences, not 
       {
         "id": "book_hotel",
         "name": "Book Hotel",
-        "tool": "book_hotel",
+        "tool_name": "book_hotel",
         "parameters": {"destination": "Paris", "dates": "2024-07-15 to 2024-07-22"},
-        "cancellation": {
-          "tool": "cancel_hotel",
+        "compensation": {
+          "tool_name": "cancel_hotel",
           "parameters": {"booking_id": "{{hotel_booking_id}}"}
         }
       },
       {
         "id": "book_car",
         "name": "Book Rental Car",
-        "tool": "book_car",
+        "tool_name": "book_car",
         "parameters": {"pickup_location": "Paris Airport", "dates": "2024-07-15 to 2024-07-22"},
-        "cancellation": {
-          "tool": "cancel_car",
+        "depends_on": ["book_hotel"],
+        "compensation": {
+          "tool_name": "cancel_car",
           "parameters": {"booking_id": "{{car_booking_id}}"}
         }
       }
@@ -92,7 +93,7 @@ This system provides **execution support** for complex tool call sequences, not 
 }
 ```
 
-### 5. Record Cancellation
+### 5. Record Compensation
 ```json
 {
   "execution_id": "exec_xyz789",
@@ -112,7 +113,7 @@ src/
 │   ├── ExecutePlanTool.ts   # Plan execution
 │   ├── StatusTool.ts        # Status monitoring
 │   ├── ControlTool.ts       # Execution control
-│   └── RecordCompensationTool.ts # Cancellation logging
+  │   └── RecordCompensationTool.ts # Compensation logging
 ├── prompts/                  # AI guidance and templates
 │   └── ToolExecutionPlanningPrompt.ts
 ├── resources/                # Documentation and examples
@@ -161,9 +162,9 @@ Add this to your MCP client configuration:
 ## Key Features
 
 - **Contextual Dependencies**: Manage relationships between tool calls
-- **Manual Cancellation**: AI-driven failure handling and rollback
+- **Manual Compensation**: AI-driven failure handling and rollback
 - **Execution Monitoring**: Real-time status tracking and control
-- **Audit Trail**: Comprehensive logging of all actions and cancellations
+- **Audit Trail**: Comprehensive logging of all actions and compensations
 - **Flexible Planning**: Support for complex, multi-step workflows
 
 ## Important Notes
@@ -171,7 +172,7 @@ Add this to your MCP client configuration:
 1. **This is NOT the MSA Saga pattern** - No automatic rollback or distributed transaction guarantees
 2. **AI Responsibility** - The AI must monitor execution and handle failures manually
 3. **Contextual Awareness** - Always consider how tool failures affect related operations
-4. **Cancellation First** - Design plans with cancellation strategies from the beginning
+4. **Compensation First** - Design plans with compensation strategies from the beginning
 
 ## Development Status
 

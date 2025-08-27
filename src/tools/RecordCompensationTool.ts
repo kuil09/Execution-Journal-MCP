@@ -9,28 +9,28 @@ class RecordCompensationTool extends MCPTool<{
   details?: Record<string, any>;
 }> {
   name = "record_compensation";
-  description = "Record a cancellation action that was performed manually";
+  description = "Record a compensation action that was performed manually";
 
   schema = {
     execution_id: {
       type: z.string(),
-      description: "ID of the execution where the cancellation occurred"
+      description: "ID of the execution where the compensation occurred",
     },
     step_id: {
       type: z.string(),
-      description: "ID of the step that was cancelled"
+      description: "ID of the step that was compensated",
     },
     reason: {
       type: z.string(),
-      description: "Reason why the cancellation was necessary"
+      description: "Reason why the compensation was necessary",
     },
     action_taken: {
       type: z.string(),
-      description: "Description of what cancellation action was performed"
+      description: "Description of what compensation action was performed",
     },
     details: {
       type: z.record(z.any()).optional(),
-      description: "Additional details about the cancellation"
+      description: "Additional details about the compensation",
     }
   };
 
@@ -38,8 +38,8 @@ class RecordCompensationTool extends MCPTool<{
     try {
       const timestamp = new Date().toISOString();
       const compensationId = `comp_${Date.now().toString(36)}`;
-      
-      const resultText = `Cancellation action recorded successfully!
+
+      const resultText = `Compensation action recorded successfully!
 
 Compensation ID: ${compensationId}
 Execution ID: ${input.execution_id}
@@ -50,13 +50,13 @@ Timestamp: ${timestamp}
 ${input.details ? `Details: ${JSON.stringify(input.details, null, 2)}` : ''}
 
 Note: This is a tool execution planning system, not the MSA Saga pattern.
-- Cancellation actions are recorded but not automatically executed
-- You must manually invoke cancellation tools when failures occur
-- This tool helps track what was cancelled and why
+- Compensation actions are recorded but not automatically executed
+- You must manually invoke compensation tools when failures occur
+- This tool helps track what was compensated and why
 - Use this information for audit trails and debugging
 
-Remember: Always consider contextual dependencies when cancelling operations.
-If one tool call fails, related tool calls may also need to be cancelled.`;
+Remember: Always consider contextual dependencies when compensating operations.
+If one tool call fails, related tool calls may also need to be compensated.`;
 
       return {
         content: [{

@@ -84,7 +84,7 @@ try {
     (server as any).addResource(ToolExecutionExamplesResource);
   }
 } catch (error) {
-  // Silent registration - MCP Framework will handle errors
+  console.error("Failed to register components:", error);
 }
 
 // 서버 시작

@@ -8,10 +8,11 @@ class SavePlanTool extends MCPTool<{
     steps: Array<{
       id: string;
       name: string;
-      tool: string;
+      tool_name: string;
       parameters: Record<string, any>;
-      cancellation?: {
-        tool: string;
+      depends_on?: string[];
+      compensation?: {
+        tool_name: string;
         parameters: Record<string, any>;
       };
     }>;
@@ -24,45 +25,73 @@ class SavePlanTool extends MCPTool<{
     plan: {
       type: z.object({
         name: z.string().describe("Name of the plan"),
-        description: z.string().optional().describe("Description of the plan"),
-        steps: z.array(z.object({
-          id: z.string().describe("Unique identifier for the step"),
-          name: z.string().describe("Human-readable name for the step"),
-          tool: z.string().describe("Tool to be called"),
-          parameters: z.record(z.any()).describe("Parameters for the tool"),
-          cancellation: z.object({
-            tool: z.string().describe("Tool to call for cancellation"),
-            parameters: z.record(z.any()).describe("Parameters for the cancellation tool")
-          }).optional().describe("Cancellation action for this step")
-        })).describe("Array of steps to execute")
+        description: z
+          .string()
+          .optional()
+          .describe("Description of the plan"),
+        steps: z
+          .array(
+            z.object({
+              id: z.string().describe("Unique identifier for the step"),
+              name: z.string().describe("Human-readable name for the step"),
+              tool_name: z.string().describe("Tool to be called"),
+              parameters: z
+                .record(z.any())
+                .describe("Parameters for the tool"),
+              depends_on: z
+                .array(z.string())
+                .optional()
+                .describe("IDs of steps this step depends on"),
+              compensation: z
+                .object({
+                  tool_name: z
+                    .string()
+                    .describe("Tool to call for compensation"),
+                  parameters: z
+                    .record(z.any())
+                    .describe("Parameters for the compensation tool"),
+                })
+                .optional()
+                .describe("Compensation action for this step"),
+            })
+          )
+          .describe("Array of steps to execute"),
       }),
-      description: "The plan object to save"
-    }
+      description: "The plan object to save",
+    },
   };
 
   async execute(input: { plan: any }) {
     try {
-      // For now, return a mock response since we don't have the actual savePlan method
       const planId = `plan_${Date.now().toString(36)}`;
-      
+
       return {
-        content: [{
-          type: "text",
-          text: `Plan "${input.plan.name}" saved successfully with ID: ${planId}
-
-Steps: ${input.plan.steps.length}
-- ${input.plan.steps.map((step: any) => `${step.name} (${step.tool})`).join('\n- ')}
-
-Note: This is a tool execution planning system, not the MSA Saga pattern. 
-Each step has cancellation actions that you must execute manually when failures occur.`
-        }]
+        content: [
+          {
+            type: "json",
+            json: {
+              plan_id: planId,
+              name: input.plan.name,
+              step_count: input.plan.steps.length,
+              note:
+                "This is a tool execution planning system, not the MSA Saga pattern. Each step may define compensation actions that must be executed manually when failures occur.",
+            },
+          },
+        ],
       };
     } catch (error) {
       return {
-        content: [{
-          type: "text",
-          text: `Error saving plan: ${error instanceof Error ? error.message : String(error)}`
-        }]
+        content: [
+          {
+            type: "json",
+            json: {
+              error:
+                error instanceof Error
+                  ? error.message
+                  : String(error),
+            },
+          },
+        ],
       };
     }
   }
