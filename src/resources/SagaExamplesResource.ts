@@ -11,10 +11,11 @@ class SagaExamplesResource extends MCPResource {
       "database-migration": {
         name: "Database Migration",
         description: "Example of migrating data between databases with rollback capability",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure. YOU (AI) must handle failures and execute compensation actions manually.",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences. YOU (AI) must handle failures and execute compensation actions manually.",
+        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system.",
         ai_responsibilities: [
-          "Monitor each step for failures",
-          "Call compensation tools when steps fail",
+          "Monitor each tool call for failures",
+          "Call compensation tools when tool calls fail",
           "Ensure data consistency through proper planning",
           "Handle rollbacks manually"
         ],
@@ -28,7 +29,7 @@ class SagaExamplesResource extends MCPResource {
               tool: "restore_database",
               parameters: { target: "production_db", backup: "{{backup_id}}" }
             },
-            note: "AI must monitor this step and handle failures"
+            note: "AI must monitor this tool call and handle failures"
           },
           {
             id: "migrate-data",
@@ -39,7 +40,7 @@ class SagaExamplesResource extends MCPResource {
               tool: "rollback_migration",
               parameters: { target: "new_db" }
             },
-            note: "If this fails, AI must call compensation tools"
+            note: "If this tool call fails, AI must call compensation tools"
           },
           {
             id: "verify-migration",
@@ -57,10 +58,11 @@ class SagaExamplesResource extends MCPResource {
       "file-processing": {
         name: "File Processing Pipeline",
         description: "Example of processing files with cleanup on failure",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure. YOU (AI) must handle failures and execute compensation actions manually.",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences. YOU (AI) must handle failures and execute compensation actions manually.",
+        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system.",
         ai_responsibilities: [
           "Monitor file operations for failures",
-          "Clean up partial results when steps fail",
+          "Clean up partial results when tool calls fail",
           "Ensure no orphaned files remain",
           "Handle cleanup operations manually"
         ],
@@ -103,10 +105,11 @@ class SagaExamplesResource extends MCPResource {
       "api-integration": {
         name: "API Integration",
         description: "Example of integrating multiple APIs with compensation",
-        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure. YOU (AI) must handle failures and execute compensation actions manually.",
+        warning: "⚠️ IMPORTANT: This system provides tools and infrastructure for managing tool call sequences. YOU (AI) must handle failures and execute compensation actions manually.",
+        note: "This is NOT the MSA Saga pattern - it's a tool execution planning system.",
         ai_responsibilities: [
           "Monitor API calls for failures",
-          "Rollback successful operations when later steps fail",
+          "Rollback successful operations when later tool calls fail",
           "Ensure data consistency across systems",
           "Handle compensation operations manually"
         ],
@@ -131,7 +134,7 @@ class SagaExamplesResource extends MCPResource {
               tool: "cancel_billing_account",
               parameters: { accountId: "{{billing_account_id}}" }
             },
-            note: "If this fails, AI must delete the CRM user"
+            note: "If this tool call fails, AI must delete the CRM user"
           },
           {
             id: "send-welcome",
@@ -142,7 +145,7 @@ class SagaExamplesResource extends MCPResource {
               tool: "cancel_email",
               parameters: { emailId: "{{email_id}}" }
             },
-            note: "If this fails, AI must cancel billing and delete user"
+            note: "If this tool call fails, AI must cancel billing and delete user"
           }
         ]
       }

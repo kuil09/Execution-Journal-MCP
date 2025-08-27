@@ -1,31 +1,32 @@
-# SAGA MCP Server - Development TODO
+# Tool Execution Planning & Cancellation System - Development TODO
 
 ## 🚨 **CRITICAL: Current System Limitations**
 
 ### **What This System IS:**
-- ✅ **Execution Support Infrastructure**: Tools, storage, and monitoring for SAGA workflows
-- ✅ **Plan Management**: Save, load, and organize execution plans
-- ✅ **Basic Execution Control**: Start, pause, resume, cancel workflows
-- ✅ **Status Monitoring**: Track execution progress and step results
+- ✅ **Tool Execution Planning Infrastructure**: Tools, storage, and monitoring for managing tool call sequences
+- ✅ **Plan Management**: Save, load, and organize tool execution plans
+- ✅ **Basic Execution Control**: Start, pause, resume, cancel tool execution plans
+- ✅ **Status Monitoring**: Track execution progress and tool call results
 - ✅ **Compensation Recording**: Log rollback actions (but NOT execute them)
 
 ### **What This System is NOT:**
+- ❌ **MSA Saga Pattern**: This is NOT the microservices saga pattern
 - ❌ **Execution Guarantee System**: Does NOT automatically ensure successful completion
 - ❌ **Auto-Recovery System**: Does NOT automatically handle failures or rollbacks
-- ❌ **DAG Executor**: Dependencies are stored but executed sequentially
+- ❌ **Parallel Executor**: Tools are called sequentially (no parallel execution yet)
 - ❌ **Intelligent Retry System**: Basic retry only, no smart failure handling
 
 ## 🎯 **AI Responsibilities (Critical for Success)**
 
 **YOU (the AI) must:**
-1. **Design Robust Plans**: Include compensation actions for every step
+1. **Design Robust Plans**: Include compensation actions for every tool call
 2. **Monitor Continuously**: Check execution status and detect failures
-3. **Handle Failures Explicitly**: Call compensation tools when steps fail
+3. **Handle Failures Explicitly**: Call cancellation/compensation tools when tool calls fail
 4. **Manage Rollbacks**: Execute rollback operations manually
 5. **Ensure Consistency**: Plan for data integrity and recovery scenarios
 
 **The system will NOT:**
-- Automatically retry failed steps
+- Automatically retry failed tool calls
 - Execute compensation actions
 - Handle rollbacks automatically
 - Guarantee successful completion
@@ -33,24 +34,24 @@
 ## 📋 **Project Status Overview**
 
 ### ✅ **Completed (Phase 1-4)**
-- [x] **Basic SAGA Infrastructure**: Core types, storage, and lifecycle management
-- [x] **Plan Management**: CRUD operations for execution plans
-- [x] **Execution Control**: Start, pause, resume, cancel workflows
-- [x] **Status Monitoring**: Real-time execution status and step details
+- [x] **Basic Tool Execution Planning Infrastructure**: Core types, storage, and lifecycle management
+- [x] **Plan Management**: CRUD operations for tool execution plans
+- [x] **Execution Control**: Start, pause, resume, cancel tool execution plans
+- [x] **Status Monitoring**: Real-time execution status and tool call details
 - [x] **Compensation Recording**: Log rollback actions (manual invocation)
 - [x] **Tool Integration**: Basic tool execution with retry logic
 - [x] **MCP Integration**: Prompts and resources for AI guidance
 
 ### 🔄 **In Progress (Phase 5)**
 - [ ] **Tool Coordinator**: Centralized tool dispatch and error handling
-- [ ] **Execution Scheduler**: DAG-based execution with dependency resolution
+- [ ] **Execution Scheduler**: Sequential execution with dependency resolution
 - [ ] **Context Management**: Execution context and variable passing
 - [ ] **Advanced Monitoring**: Real-time event streaming and alerts
 
 ### 📅 **Planned (Phase 6+)**
 - [ ] **Intelligent Retry**: Smart retry policies and backoff strategies
 - [ ] **Auto-Compensation**: Automatic rollback execution (future consideration)
-- [ ] **Distributed Coordination**: Multi-server SAGA orchestration
+- [ ] **Parallel Execution**: Concurrent tool execution (future consideration)
 - [ ] **Advanced Analytics**: Execution metrics and performance insights
 
 ## 🏗️ **Current Architecture**
@@ -70,17 +71,17 @@ ToolCoordinator (🔄 In Progress)
 └── Error Aggregation (🔄 Planned)
 
 ExecutionScheduler (🔄 In Progress)
-├── DAG Parsing (✅ Complete)
-├── Topological Sort (✅ Complete)
-├── Dependency Resolution (🔄 In Progress)
-└── Concurrent Execution (🔄 Planned)
+├── Sequential Execution (✅ Complete)
+├── Dependency Parsing (✅ Complete)
+├── Step Ordering (🔄 In Progress)
+└── Parallel Execution (🔄 Planned)
 ```
 
 ### **Storage Layer**
 ```
 SQLite Database (✅ Complete)
 ├── Plans Table (✅ Complete)
-├── SAGA Instances (✅ Complete)
+├── Execution Instances (✅ Complete)
 ├── Steps Table (✅ Complete)
 └── Events Table (✅ Complete)
 ```
@@ -94,14 +95,14 @@ SQLite Database (✅ Complete)
 - [ ] Add tool execution metrics and performance tracking
 
 ### **Priority 2: Execution Scheduler Implementation**
-- [ ] Complete DAG dependency resolution
-- [ ] Implement concurrent step execution
-- [ ] Add cycle detection and validation
-- [ ] Implement step prioritization and queuing
+- [ ] Complete sequential execution with proper ordering
+- [ ] Implement step validation and cycle detection
+- [ ] Add step prioritization and queuing
+- [ ] Plan for future parallel execution
 
 ### **Priority 3: Context Management**
 - [ ] Design execution context structure
-- [ ] Implement variable passing between steps
+- [ ] Implement variable passing between tool calls
 - [ ] Add context validation and type checking
 - [ ] Implement context persistence and recovery
 
@@ -128,14 +129,14 @@ SQLite Database (✅ Complete)
 ## 📊 **Success Metrics**
 
 ### **Current Status (Phase 4 Complete)**
-- ✅ **Basic Workflow Execution**: Simple sequential workflows work
+- ✅ **Basic Tool Execution Planning**: Simple sequential tool call plans work
 - ✅ **Compensation Definition**: Compensation actions can be defined and recorded
-- ✅ **Basic Error Detection**: Step failures are detected and logged
-- ✅ **Execution Control**: Workflows can be paused, resumed, and cancelled
+- ✅ **Basic Error Detection**: Tool call failures are detected and logged
+- ✅ **Execution Control**: Tool execution plans can be paused, resumed, and cancelled
 
 ### **Target for Phase 5**
-- 🎯 **DAG Execution**: Complex workflows with dependencies execute correctly
-- 🎯 **Robust Error Handling**: Comprehensive failure detection and recovery
+- 🎯 **Robust Tool Execution**: Complex tool call sequences execute correctly
+- 🎯 **Comprehensive Error Handling**: Comprehensive failure detection and recovery
 - 🎯 **Performance Monitoring**: Real-time metrics and performance insights
 - 🎯 **Advanced Tool Integration**: Seamless integration with external services
 
@@ -143,14 +144,14 @@ SQLite Database (✅ Complete)
 
 ### **System Limitations**
 1. **No Automatic Recovery**: You must handle all failures manually
-2. **Sequential Execution**: DAG dependencies are not yet executed
+2. **Sequential Execution**: Tools are called one after another
 3. **Basic Retry Logic**: Limited automatic retry capabilities
 4. **Mock Tools**: External tool execution is simulated
 
 ### **Required AI Behavior**
 1. **Always Monitor**: Check execution status continuously
 2. **Plan for Failure**: Include compensation actions in every plan
-3. **Handle Errors**: Explicitly invoke compensation when steps fail
+3. **Handle Errors**: Explicitly invoke cancellation when tool calls fail
 4. **Test Thoroughly**: Validate plans before execution
 5. **Document Everything**: Record all decisions and actions
 
@@ -176,4 +177,4 @@ SQLite Database (✅ Complete)
 
 ---
 
-**Remember**: This system is designed to support your SAGA workflow execution, not to guarantee it. Success depends on your careful planning, monitoring, and failure handling.
+**Remember**: This system is designed to support your tool execution planning and management, not to guarantee it. Success depends on your careful planning, monitoring, and failure handling. This is NOT the MSA saga pattern - it's a tool execution planning system.
