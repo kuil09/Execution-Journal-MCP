@@ -11,6 +11,7 @@ export function getDb(): Database.Database {
   const dbPath = path.join(dataDir, "saga.db");
   const db = new Database(dbPath);
   db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS plans (

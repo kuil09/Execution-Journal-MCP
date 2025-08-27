@@ -2,6 +2,26 @@
 
 A Model Context Protocol (MCP) server built with mcp-framework.
 
+## Concept: Execution Support, not Execution Guarantee
+- This server provides execution SUPPORT primitives for AI agents using the SAGA pattern.
+- The AI designs plans and drives execution; the server persists state, tracks progress, and exposes controls.
+- Complex guarantees (DAG scheduling, retries, compensation execution) are roadmapped but not fully automatic yet.
+
+### AI Responsibilities
+- Design plans (DAG, dependencies, compensation, retry policy) and save them via `save_plan`.
+- Start execution with `execute_tool_chain` and monitor with `get_execution_status`.
+- On failures, explicitly invoke cancellation/compensation tools as needed (server does not auto-run them yet).
+- Use pause/resume/cancel controls (coming) to manage long-running workflows.
+- Note: `delete_plan` will fail if any executions exist for the plan. Cancel or wait for completion first.
+
+### Current Limitations (Important)
+- Dependencies are stored but executed sequentially (no DAG scheduler yet).
+- Compensation steps are defined in plans but not auto-executed by the server.
+- Retry policies are defined but not yet applied at runtime.
+- Tool invocation is mocked in the demo path; add real tool dispatch in a coordinator.
+
+---
+
 ## Quick Start
 
 ```bash
@@ -16,6 +36,13 @@ npm start                    # stdio (default) - for Claude Desktop
 npm run start:sse           # SSE transport on port 8080
 npm run start:http          # HTTP Stream transport on port 8080
 ```
+
+## Recommended AI Flow
+1) Create/save a plan with explicit dependencies/compensation using `save_plan`.
+2) Execute with `execute_tool_chain` and retrieve the `execution_id`.
+3) Poll `get_execution_status` for progress and react to failures.
+4) If a critical step fails, call your compensation/cancel tools explicitly.
+5) Optionally pause/resume/cancel (tools to be added in Phase 4).
 
 ## Project Structure
 

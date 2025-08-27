@@ -27,6 +27,50 @@ export class PlanRepository {
       created_at: row.created_at,
     };
   }
+
+  list(options: { offset?: number; limit?: number } = {}): StoredPlan[] {
+    const { offset = 0, limit = 50 } = options;
+    const rows = this.db
+      .prepare(`SELECT * FROM plans ORDER BY datetime(created_at) DESC LIMIT ? OFFSET ?`)
+      .all(limit, offset) as any[];
+    return rows.map((row: any) => ({
+      plan_id: row.plan_id,
+      name: row.name,
+      steps: JSON.parse(row.steps_json),
+      created_at: row.created_at,
+    }));
+  }
+
+  update(planId: string, update: { name?: string; steps?: any[] }): StoredPlan | null {
+    const existing = this.get(planId);
+    if (!existing) return null;
+    const updated: StoredPlan = {
+      plan_id: existing.plan_id,
+      name: update.name ?? existing.name,
+      steps: update.steps ?? existing.steps,
+      created_at: existing.created_at,
+    };
+    this.save(updated);
+    return updated;
+  }
+
+  hasExecutions(planId: string): boolean {
+    const row = this.db
+      .prepare(`SELECT COUNT(1) as cnt FROM saga_instances WHERE plan_id = ?`)
+      .get(planId) as any;
+    return (row?.cnt ?? 0) > 0;
+  }
+
+  delete(planId: string): boolean {
+    // Guard: prevent delete when executions exist
+    if (this.hasExecutions(planId)) {
+      throw new Error(
+        `Cannot delete plan '${planId}': executions exist. Cancel or complete them before deletion.`
+      );
+    }
+    const info = this.db.prepare(`DELETE FROM plans WHERE plan_id = ?`).run(planId);
+    return (info.changes ?? 0) > 0;
+  }
 }
 
 

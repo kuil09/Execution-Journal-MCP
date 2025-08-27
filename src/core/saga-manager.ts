@@ -48,11 +48,17 @@ class SagaManager {
   async executeAsync(id: string, options: ExecuteOptions = {}) {
     const data = this.sagaRepo.getWithSteps(id);
     if (!data) throw new Error(`SAGA not found: ${id}`);
-    const { instance, steps } = data;
+    const { steps } = data;
     const now = new Date().toISOString();
-    this.sagaRepo.update({ id, status: "running", started_at: now, updated_at: now });
+    this.sagaRepo.update({ id, status: "running", started_at: data.instance.started_at ?? now, updated_at: now });
 
-    for (const step of steps) {
+    let failed = false;
+    let paused = false;
+
+    // Skip steps already completed
+    const remaining = steps.filter((s: any) => s.status !== "completed");
+
+    for (const step of remaining) {
       const start = new Date().toISOString();
       this.sagaRepo.upsertStep({ ...step, status: "running", started_at: start });
       this.sagaRepo.update({ id, current_step: step.step_id, updated_at: new Date().toISOString() });
@@ -62,18 +68,64 @@ class SagaManager {
         const complete = new Date().toISOString();
         this.sagaRepo.upsertStep({ ...step, status: "completed", started_at: start, completed_at: complete, result_json: JSON.stringify({ success: true }) });
       } catch (err: any) {
+        failed = true;
         this.sagaRepo.upsertStep({ ...step, status: "failed", error: err?.message || String(err) });
-        this.sagaRepo.update({ id, status: "failed", error: err?.message || String(err), updated_at: new Date().toISOString() });
+        const update: any = { id, status: options.pause_on_error ? "paused" : "failed", error: err?.message || String(err), updated_at: new Date().toISOString() };
+        this.sagaRepo.update(update);
         if (options.auto_compensate) {
           // TODO: run compensation steps
         }
-        if (options.pause_on_error) return;
+        if (options.pause_on_error) {
+          paused = true;
+          break;
+        }
         break;
       }
     }
 
-    const completeAt = new Date().toISOString();
-    this.sagaRepo.update({ id, status: "completed", completed_at: completeAt, updated_at: completeAt, current_step: "finished" });
+    const finishedAt = new Date().toISOString();
+
+    if (paused) {
+      // Do not mark completed
+      this.sagaRepo.update({ id, updated_at: finishedAt, current_step: "paused" as any });
+      return;
+    }
+
+    if (failed) {
+      // Already marked as failed above; ensure current_step reflects end
+      this.sagaRepo.update({ id, updated_at: finishedAt, current_step: "failed" as any });
+      return;
+    }
+
+    // Only mark completed if no failures occurred
+    this.sagaRepo.update({ id, status: "completed", completed_at: finishedAt, updated_at: finishedAt, current_step: "finished" });
+  }
+
+  pauseSAGA(id: string) {
+    const data = this.sagaRepo.get(id);
+    if (!data) throw new Error(`SAGA not found: ${id}`);
+    if (data.status !== "running") return { id, status: data.status };
+    const now = new Date().toISOString();
+    this.sagaRepo.update({ id, status: "paused", updated_at: now });
+    return { id, status: "paused" };
+  }
+
+  resumeSAGA(id: string, options: ExecuteOptions = {}) {
+    const data = this.sagaRepo.get(id);
+    if (!data) throw new Error(`SAGA not found: ${id}`);
+    if (data.status !== "paused") return { id, status: data.status };
+    // Fire-and-forget resume; executeAsync will skip completed steps
+    this.executeAsync(id, options).catch(() => {});
+    return { id, status: "running" };
+  }
+
+  cancelSAGA(id: string) {
+    const data = this.sagaRepo.get(id);
+    if (!data) throw new Error(`SAGA not found: ${id}`);
+    const now = new Date().toISOString();
+    if (data.status === "completed" || data.status === "failed") return { id, status: data.status };
+    this.sagaRepo.update({ id, status: "failed", updated_at: now, current_step: "cancelled" as any, error: "Cancelled by user" });
+    return { id, status: "failed" };
   }
 
   getSAGA(id: string) {

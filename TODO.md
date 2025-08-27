@@ -28,10 +28,10 @@
 
 ### Phase 3: SAGA Backend Implementation ✅ COMPLETED
 - [x] **Core SAGA Manager** (`src/core/saga-manager.ts`)
-  - [x] SAGAManager class with create, execute, pause, resume, compensate methods
-  - [x] Event sourcing implementation
-  - [x] Step dependency resolution and execution ordering
-  - [x] Automatic compensation transaction handling
+  - [x] SAGAManager class with create, execute methods (pause/resume/compensate not yet implemented)
+  - [x] Basic event sourcing implementation (database storage)
+  - [x] Step dependency definition (stored in plan but not executed with DAG logic)
+  - [x] Compensation transaction definition (stored in plan but not automatically executed)
 
 - [x] **Storage Layer** (`src/storage/`)
   - [x] SQLite event store implementation (`sqlite-event-store.ts`)  
@@ -46,17 +46,17 @@
   - [ ] Tool timeout management
 
 ### Phase 4: AI-Directed Planning & Execution Control (HIGH PRIORITY)
-- [ ] **AI-Directed Plan Management**
-  - [ ] `save_plan` tool - AI creates custom plan structures
-  - [ ] `list_plans` tool - Browse saved plans
-  - [ ] `update_plan` tool - Modify existing plans
-  - [ ] `delete_plan` tool - Remove unused plans
+- [x] **AI-Directed Plan Management**
+  - [x] `save_plan` tool - AI creates custom plan structures
+  - [x] `list_plans` tool - Browse saved plans
+  - [x] `update_plan` tool - Modify existing plans
+  - [x] `delete_plan` tool - Remove unused plans
 
-- [ ] **Enhanced Execution Control**
-  - [ ] `pause_execution` tool - Pause running executions
-  - [ ] `resume_execution` tool - Resume paused executions
-  - [ ] `cancel_execution` tool - Cancel running executions
-  - [ ] Execution state management (paused, cancelled, etc.)
+- [x] **Enhanced Execution Control**
+  - [x] `pause_execution` tool - Pause running executions
+  - [x] `resume_execution` tool - Resume paused executions
+  - [x] `cancel_execution` tool - Cancel running executions
+  - [x] Execution state management (paused, cancelled, etc.)
 
 - [ ] **Advanced Plan Structures**
   - [ ] DAG-based workflow support with dependencies
@@ -123,14 +123,21 @@
 ```
 saga-mcp-server/
 ├── src/
-│   ├── tools/                   # ✅ 4 MCP tools implemented
+│   ├── tools/                   # ✅ 11 MCP tools implemented
 │   │   ├── TestConnectionTool.ts
 │   │   ├── PlanToolChainTool.ts
 │   │   ├── ExecuteToolChainTool.ts
-│   │   └── GetExecutionStatusTool.ts
-│   ├── types/                   # ✅ SAGA type definitions
+│   │   ├── GetExecutionStatusTool.ts
+│   │   ├── SavePlanTool.ts      # ✅ AI creates custom plans
+│   │   ├── ListPlansTool.ts     # ✅ Browse saved plans
+│   │   ├── UpdatePlanTool.ts    # ✅ Modify existing plans
+│   │   ├── DeletePlanTool.ts    # ✅ Remove unused plans
+│   │   ├── PauseExecutionTool.ts # ✅ Pause running executions
+│   │   ├── ResumeExecutionTool.ts # ✅ Resume paused executions
+│   │   └── CancelExecutionTool.ts # ✅ Cancel running executions
+│   ├── types/                   # ✅ SAGA type definitions (basic)
 │   │   └── saga.ts
-│   ├── core/                    # ✅ SAGA engine + DB manager
+│   ├── core/                    # ✅ SAGA engine + DB manager (basic)
 │   │   ├── saga-manager.ts
 │   │   └── db.ts
 │   ├── storage/                 # ✅ Persistence layer
@@ -142,29 +149,6 @@ saga-mcp-server/
 ├── examples/                    # Usage examples
 ├── tests/                       # Test files
 └── ...
-
-## 🚧 Next Phase Structure (Phase 4)
-```
-saga-mcp-server/
-├── src/
-│   ├── tools/                   # 🚧 8+ MCP tools (AI-directed planning)
-│   │   ├── SavePlanTool.ts      # AI creates custom plans
-│   │   ├── ListPlansTool.ts     # Browse saved plans
-│   │   ├── UpdatePlanTool.ts    # Modify existing plans
-│   │   ├── DeletePlanTool.ts    # Remove unused plans
-│   │   ├── PauseExecutionTool.ts # Pause running executions
-│   │   ├── ResumeExecutionTool.ts # Resume paused executions
-│   │   ├── CancelExecutionTool.ts # Cancel running executions
-│   │   └── ... (existing tools)
-│   ├── types/                   # 🚧 Enhanced plan types
-│   │   ├── saga.ts
-│   │   ├── plan.ts              # DAG-based plan structures
-│   │   └── execution.ts         # Enhanced execution control
-│   ├── core/                    # 🚧 Enhanced execution control
-│   │   ├── saga-manager.ts
-│   │   ├── execution-controller.ts # pause/resume/cancel
-│   │   └── db.ts
-│   └── ...
 ```
 
 ## 🔧 Development Commands
@@ -175,46 +159,67 @@ npm run dev      # Build + start combined
 ```
 
 ## 🎯 Success Metrics
-- [x] ✅ "Book a trip to Jeju Island" → Complete workflow execution with SQLite persistence
-- [x] 🔄 Automatic compensation on mid-chain failures (basic implementation)
+- [x] ✅ "Book a trip to Jeju Island" → Basic workflow execution with SQLite persistence
+- [x] 🔄 Compensation transaction definition (structure defined, execution pending)
 - [x] 💾 Cross-session context recovery via SQLite database
 - [x] 📊 Real-time progress tracking from database
-- [x] 🛡️ Bulletproof failure handling (basic error handling implemented)
+- [x] 🛡️ Basic error detection and status tracking (failure handling limited)
 - [x] 🌐 Multi-transport support (stdio, SSE, HTTP Stream)
-- [ ] 🎯 AI-directed custom plan creation and management
-- [ ] ⏸️ Execution control (pause/resume/cancel)
-- [ ] 🔗 DAG-based workflow with dependencies
+- [x] 🎯 AI-directed custom plan creation and management
+- [x] ⏸️ Execution control (pause/resume/cancel)
+- [ ] 🔗 DAG-based workflow execution (dependencies stored but ignored)
 - [ ] 📝 Advanced context management and persistence
 
 ## 📅 Milestones
 - **Week 1**: ✅ Phase 3 - SAGA Backend (COMPLETED)
-- **Week 2**: Phase 4 - AI-Directed Planning & Execution Control (8 hours)
+- **Week 2**: ✅ Phase 4 - AI-Directed Planning (COMPLETED)
+- **Week 2-3**: ✅ Phase 4 - Enhanced Execution Control (COMPLETED)
 - **Week 3**: Phase 5 - Advanced Features & Production Readiness (6 hours)
 - **Week 4**: Phase 6 - Production Polish & Documentation (4 hours)
 
-## 🚀 **Current Status: Phase 3 COMPLETED!**
+## 🚀 **Current Status: Phase 4 (AI-Directed Planning) PARTIALLY COMPLETED!**
 
 ### ✅ **What's Working Now:**
-- **4 MCP Tools**: All tools successfully loaded and validated
+- **11 MCP Tools**: All tools successfully loaded and validated (4 original + 4 plan management + 3 exec control)
 - **SQLite Database**: Automatic table creation and data persistence
-- **SAGA Manager**: Complete execution lifecycle management
+- **SAGA Manager**: Basic execution lifecycle management (create, execute, pause, resume, cancel, monitor)
 - **Cross-session State**: Execution state persists across server restarts
 - **Health Monitoring**: Real-time database health checks
 - **Multi-Transport Support**: stdio, SSE, HTTP Stream all supported
 - **CLI Transport Selection**: Choose transport method via command line arguments
+- **Plan Management**: AI can create, list, update, and delete custom plans
 
-### 🔄 **Next Priority (Phase 4):**
-- **AI-Directed Planning**: AI creates and saves custom plan structures
-- **Enhanced Execution Control**: pause/resume/cancel execution
-- **Advanced Plan Management**: DAG-based workflows with dependencies
+### 🔄 **Next Priority (Phase 4 Remaining):**
+- **Advanced Plan Management**: DAG-based workflow execution (dependencies currently stored but ignored)
 - **Context Management**: Cross-session execution context persistence
 
 ---
 *Last Updated: 2025-08-27*
-*Status: Phase 3 COMPLETED, Phase 4 (AI-Directed Planning) Ready to Start*
+*Status: Phase 4 (AI-Directed Planning) PARTIALLY COMPLETED, Enhanced Execution Control Completed*
 
 ## 🔄 **Key Insights from Discussion:**
 - **MCP Metadata**: Already provided by MCP Framework automatically - no need to implement
-- **AI-Directed Planning**: AI should create and save custom plan structures, not server-generated
-- **Current Limitation**: `PlanToolChainTool` uses hardcoded logic instead of AI-defined plans
-- **Focus Areas**: Plan management tools, execution control, DAG-based workflows
+- **AI-Directed Planning**: ✅ COMPLETED - AI can now create, save, and manage custom plan structures
+- **Current Limitation**: `PlanToolChainTool` still uses hardcoded logic, but new `save_plan` tool allows AI-defined plans
+- **Focus Areas**: Execution control (pause/resume/cancel), DAG-based workflow execution, context management
+- **Important Note**: This is a "execution support" system, not a "guaranteed execution" system. AI must design robust plans and handle failures appropriately.
+
+## ⚠️ **Current Limitations & What AI Should Know**
+
+### **실행 보장이 아닌 실행 지원 시스템**
+- **DAG 의존성**: `depends_on` 필드는 저장되지만 실행 시 무시됨 (순차 실행)
+- **보상 트랜잭션**: `compensation` 정의는 저장되지만 자동 실행 안됨
+- **재시도 정책**: `retry_policy` 정의는 저장되지만 실제 적용 안됨
+- **실제 도구 실행**: 현재는 500ms 대기만 함 (실제 MCP 도구 호출 안됨)
+
+### **AI가 책임져야 할 부분**
+- **플랜 설계**: 의존성, 보상 전략, 재시도 정책을 명시적으로 정의
+- **실패 처리**: 각 스텝의 실패 시나리오와 복구 방법을 계획
+- **검증**: 플랜의 논리적 일관성과 실행 가능성 검증
+- **모니터링**: 실행 상태를 지속적으로 확인하고 필요시 개입
+
+### **현재 제공하는 것**
+- **플랜 저장/관리**: AI가 만든 복잡한 워크플로우를 DB에 저장
+- **실행 추적**: 각 스텝의 상태와 진행 상황을 실시간 모니터링
+- **상태 지속성**: 서버 재시작 후에도 실행 상태 복구
+- **기본 오류 감지**: 스텝 실패 시 상태 기록 및 알림
