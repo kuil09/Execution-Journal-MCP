@@ -1,64 +1,59 @@
 # Execution Journal
 
-An MCP server that helps AI coordinate sequential tool calls and keep a journal of decisions and actions. The system does not execute rollbacks; it provides a durable record of execution workflows.
+An MCP server that helps AI coordinate sequential tool calls and maintain a comprehensive journal of execution workflows, decisions, and actions.
 
-## What This System Actually Does
+## What This System Does
 
-**This is NOT the MSA Saga pattern for distributed transactions.** Instead, this system manages "loose contextual connections" between tool calls. For example:
+**Execution Journal** is a tool execution planning system that provides:
 
-- If a "travel booking" tool call fails, a contextually linked next step should be stopped
-- If a "database migration" fails, related "backup creation" and "notification sending" should be reconsidered
-- The AI is responsible for detecting failures and manually deciding actions; the server records them (journal)
+- **Sequential Planning**: Design and execute sequences of tool calls
+- **Execution Tracking**: Monitor progress and status of each step
+- **Decision Recording**: Log all decisions made during execution
+- **Action Journal**: Record manual actions taken for audit trails
+- **Contextual Awareness**: Understand relationships between tool calls
 
-## Core Concept: Execution Support, Not Execution Guarantee (Journal)
+## Core Concept
 
-This system provides **execution support** for complex tool call sequences, not automatic execution guarantees. The AI must:
-
-- Design sequential plans and declare which steps are cancellable
-- Monitor execution status
-- Handle failures manually and record actions using the journal
-- Consider contextual dependencies between tool calls
+This system acts as a **durable memo pad** for AI actions and decisions. It doesn't execute rollbacks automatically - instead, it provides a comprehensive record of what was planned, what was executed, and what decisions were made along the way.
 
 ## Available Tools
 
 ### Plan Management
-- **`record_plan`** - Record a sequential plan; each step may include `cancellable`
-- **`record_execution_start`** - Record the start of plan execution (sequential)
+- **`record_plan`** - Create and store execution plans with cancellability metadata
+- **`record_execution_start`** - Start executing a plan and track progress
 
 ### Execution Control
-- **`query_ledger`** - Query the execution journal for status, progress, and history
-- **`record_decision`** - Record a decision made during execution (stop/continue)
-- **`record_action`** - Append a journal entry about manual actions taken
+- **`query_ledger`** - Check execution status, progress, and history
+- **`record_decision`** - Log decisions made during execution (stop/continue)
+- **`record_action`** - Record manual actions taken for audit purposes
 
 ## Usage Examples
 
-### 1. Record a Travel Planning Plan (with cancellability)
+### 1. Create a Travel Planning Plan
 ```json
 {
-  "plan": {
-    "name": "Summer Vacation Planning",
-    "description": "Plan a complete summer vacation with hotel, car, and activities",
-    "steps": [
-      {
-        "id": "book_hotel",
-        "name": "Book Hotel",
-        "tool": "book_hotel",
-        "parameters": {"destination": "Paris", "dates": "2024-07-15 to 2024-07-22"},
-        "cancellable": "partially-reversible"
-      },
-      {
-        "id": "book_car",
-        "name": "Book Rental Car",
-        "tool": "book_car",
-        "parameters": {"pickup_location": "Paris Airport", "dates": "2024-07-15 to 2024-07-22"},
-        "cancellable": "reversible"
-      }
-    ]
-  }
+  "name": "Summer Vacation Planning",
+  "description": "Plan a complete summer vacation with hotel, car, and activities",
+  "steps": [
+    {
+      "id": "book_hotel",
+      "name": "Book Hotel",
+      "tool": "book_hotel",
+      "parameters": {"destination": "Paris", "dates": "2024-07-15 to 2024-07-22"},
+      "cancellable": "partially-reversible"
+    },
+    {
+      "id": "book_car",
+      "name": "Book Rental Car",
+      "tool": "book_car",
+      "parameters": {"pickup_location": "Paris Airport", "dates": "2024-07-15 to 2024-07-22"},
+      "cancellable": "reversible"
+    }
+  ]
 }
 ```
 
-### 2. Record Execution Start
+### 2. Start Execution
 ```json
 {
   "plan_id": "plan_abc123",
@@ -66,7 +61,7 @@ This system provides **execution support** for complex tool call sequences, not 
 }
 ```
 
-### 3. Query Journal
+### 3. Monitor Progress
 ```json
 {
   "execution_id": "exec_xyz789",
@@ -75,23 +70,12 @@ This system provides **execution support** for complex tool call sequences, not 
 }
 ```
 
-### 4. Record Decision
+### 4. Record Decisions and Actions
 ```json
 {
+  "execution_id": "exec_xyz789",
   "action": "stop",
-  "execution_id": "exec_xyz789",
   "reason": "Hotel booking failed, stopping related bookings"
-}
-```
-
-### 5. Record Action (Journal)
-```json
-{
-  "execution_id": "exec_xyz789",
-  "step_id": "book_hotel",
-  "action_type": "stopped",
-  "description": "Stopped hotel booking due to unavailability",
-  "details": {"alternative_dates": "2024-08-01 to 2024-08-08"}
 }
 ```
 
@@ -99,22 +83,22 @@ This system provides **execution support** for complex tool call sequences, not 
 
 ```
 src/
-├── tools/                    # Individual tool implementations
-│   ├── RecordPlanTool.ts     # Plan recording functionality
-│   ├── RecordExecutionStartTool.ts   # Execution start recording
-│   ├── QueryLedgerTool.ts    # Journal querying
-│   ├── RecordDecisionTool.ts # Decision recording
-│   └── RecordActionTool.ts   # Action logging
-├── prompts/                  # AI guidance and templates
-│   └── ToolExecutionPlanningPrompt.ts
+├── tools/                    # Tool implementations
+│   ├── RecordPlanTool.ts     # Plan creation
+│   ├── RecordExecutionStartTool.ts   # Execution start
+│   ├── QueryLedgerTool.ts    # Status monitoring
+│   ├── RecordDecisionTool.ts # Decision logging
+│   └── RecordActionTool.ts   # Action recording
+├── prompts/                  # AI guidance
+│   └── ExecutionPlanningPrompt.ts
 ├── resources/                # Documentation and examples
-│   ├── ToolExecutionDocumentationResource.ts
-│   └── ToolExecutionExamplesResource.ts
+│   ├── ExecutionDocumentationResource.ts
+│   └── ExecutionExamplesResource.ts
 ├── core/                     # Core system components
-│   ├── db.ts                # Database initialization
-│   └── saga-manager.ts      # Execution management
-└── types/                    # TypeScript type definitions
-    └── saga.ts              # Core interfaces
+│   ├── db.ts                # Database setup
+│   └── execution-manager.ts # Execution orchestration
+└── types/                    # TypeScript definitions
+    └── execution.ts         # Core interfaces
 ```
 
 ## Installation & Setup
@@ -152,28 +136,36 @@ Add this to your MCP client configuration:
 
 ## Key Features
 
-- **Simple Sequential Execution**
-- **Cancellability Metadata** per step (reversible/partially-reversible/irreversible)
-- **Execution Monitoring**: Status tracking
-- **Journal**: Durable record of manual decisions and actions
+- **Sequential Execution**: Tools are called one after another
+- **Cancellability Metadata**: Each step indicates reversibility level
+- **Comprehensive Journaling**: All decisions and actions are recorded
+- **Execution Monitoring**: Real-time status tracking
+- **Audit Trail**: Complete history for compliance and debugging
 
-## Important Notes
+## Cancellability Levels
 
-1. **This is NOT the MSA Saga pattern** - No automatic rollback or distributed transaction guarantees
-2. **AI Responsibility** - The AI must monitor execution and record all decisions/actions
-3. **Contextual Awareness** - Always consider how tool failures affect related operations
-4. **Journal First** - Design plans with cancellability metadata and record all actions
+- **`reversible`**: Can be completely undone
+- **`partially-reversible`**: Can be partially undone  
+- **`irreversible`**: Cannot be undone
+
+## Best Practices
+
+1. **Plan Design**: Keep steps focused and consider failure scenarios
+2. **Monitoring**: Check execution status regularly
+3. **Decision Recording**: Log all decisions promptly
+4. **Action Documentation**: Record what was done and why
+5. **Context Awareness**: Understand how tool failures affect related operations
 
 ## Development Status
 
 - ✅ Core tools implemented
-- ✅ MCP prompts and resources
-- ✅ Basic execution framework
-- ✅ Database-backed journal events
+- ✅ MCP integration complete
+- ✅ Database-backed journaling
+- ✅ Comprehensive documentation
 
 ## Contributing
 
-This project is designed to be simple and focused. Contributions should maintain the core principle of "execution support, not execution guarantee" while improving the user experience for AI-driven tool coordination.
+This project focuses on simplicity and clarity. Contributions should maintain the core principle of providing execution support while improving the user experience for AI-driven tool coordination.
 
 ## License
 
