@@ -48,6 +48,7 @@ export function getDb(): Database.Database {
       completed_at TEXT,
       result_json TEXT,
       error TEXT,
+      cancellable TEXT,
       PRIMARY KEY (saga_id, step_id),
       FOREIGN KEY (saga_id) REFERENCES saga_instances(id)
     );

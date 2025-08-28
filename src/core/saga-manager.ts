@@ -31,6 +31,7 @@ class SagaManager {
       name: s.name,
       tool_name: s.tool_name,
       status: "pending" as const,
+      cancellable: s.cancellable,
     }));
     this.sagaRepo.create(
       {
@@ -81,7 +82,8 @@ class SagaManager {
           status: "completed",
           started_at,
           completed_at: new Date().toISOString(),
-          result_json: JSON.stringify(res)
+          result_json: JSON.stringify(res),
+          cancellable: step.cancellable
         } as any);
       }
     } catch (err: any) {

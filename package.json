@@ -2,7 +2,7 @@
   "name": "tool-execution-planner",
   "version": "0.0.1",
   "type": "module",
-  "description": "Tool Execution Planning & Cancellation System - MCP server for managing tool call sequences with contextual dependencies",
+  "description": "Tool Execution Planning (Ledger-first) - MCP server for managing sequential tool calls with ledger recording",
   "main": "dist/index.js",
   "bin": {
     "tool-execution-planner": "./dist/index.js"
@@ -30,8 +30,8 @@
     "mcp",
     "tool-execution",
     "planning",
-    "cancellation",
-    "contextual-dependencies"
+    "ledger",
+    "sequential-execution"
   ],
   "author": "Your Name",
   "license": "MIT"

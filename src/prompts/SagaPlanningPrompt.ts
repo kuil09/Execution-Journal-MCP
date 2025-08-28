@@ -41,22 +41,22 @@ class ToolExecutionPlanningPrompt extends MCPPrompt<ToolExecutionPlanningInput> 
         role: "system",
         content: {
           type: "text",
-          text: `You are a tool execution planning expert. Your role is to help create robust plans for executing sequences of tool calls that can handle failures gracefully through cancellation actions.
+          text: `You are a tool execution planning expert. Your role is to help create sequential plans for executing tool calls and record manual actions in a ledger.
 
 IMPORTANT: This system provides execution SUPPORT, not execution GUARANTEES. You (the AI) are responsible for:
-- Designing resilient plans with cancellation actions for each tool call
-- Detecting failures and deciding when to cancel the entire plan
-- Explicitly invoking cancellation tools
+- Designing sequential plans with cancellability metadata for each tool call
+- Detecting failures and deciding when to stop the entire plan
+- Recording manual actions in the ledger
 - Monitoring execution status and handling errors
 - Ensuring data consistency through proper planning
 
 The system does NOT automatically:
 - Retry failed tool calls
-- Execute cancellation actions
+- Execute compensation actions
 - Handle rollbacks
 - Guarantee successful completion
 
-NOTE: This is NOT the MSA Saga pattern. This is a tool execution planning and cancellation system for managing contextual dependencies between tool calls.`
+NOTE: This is NOT the MSA Saga pattern. This is a tool execution planning and ledger system for managing sequential tool calls.`
         }
       },
       {
@@ -72,22 +72,23 @@ Context:
 ${complexityGuidance[complexity]}
 
 Please provide:
-1. A structured plan with clear sequential tool call order
-2. Note where earlier results are required by later steps
+1. A structured sequential plan with clear tool call order
+2. Cancellability metadata for each step (reversible/partially-reversible/irreversible)
 3. Manual failure handling notes for each tool call (what to do if it fails)
 4. Risk assessment and failure points
 5. JSON format for the plan structure
-6. Your monitoring and failure handling strategy
+6. Your monitoring and ledger recording strategy
 
 CRITICAL REMINDERS:
-- This system provides tools and infrastructure for managing tool call sequences
+- This system provides tools and infrastructure for managing sequential tool call sequences
+- Always include cancellability metadata for every tool call
 - Plan for manual intervention when tool calls fail
 - Monitor execution status continuously
-- Be prepared to call cancellation tools explicitly
-- This is NOT the MSA Saga pattern - it's a tool execution planning system
+- Be prepared to record actions in the ledger
+- This is NOT the MSA Saga pattern - it's a tool execution planning and ledger system
 - Focus on contextual dependencies: if one tool call fails, what should be stopped next?
 
-Remember: This system provides execution SUPPORT, not execution GUARANTEES. You must design robust plans and handle failures explicitly.`
+Remember: This system provides execution SUPPORT, not execution GUARANTEES. You must design sequential plans and record actions in the ledger.`
         }
       }
     ];

@@ -16,9 +16,9 @@ class ToolExecutionExamplesResource extends MCPResource {
         contextual_dependencies: "If hotel booking fails, car rental and activity bookings should also be cancelled",
         ai_responsibilities: [
           "Monitor each tool call for failures",
-          "Call cancellation tools when tool calls fail",
+          "Record actions in the ledger when tool calls fail",
           "Understand how failures affect related tool calls",
-          "Handle cancellations manually based on context"
+          "Handle failures manually and record in ledger"
         ],
         steps: [
           {
@@ -54,7 +54,7 @@ class ToolExecutionExamplesResource extends MCPResource {
           "Monitor data operations for failures",
           "Clean up partial results when tool calls fail",
           "Ensure no orphaned files remain",
-          "Handle cleanup operations manually"
+          "Handle cleanup operations manually and record in ledger"
         ],
         steps: [
           {
@@ -88,9 +88,9 @@ class ToolExecutionExamplesResource extends MCPResource {
         contextual_dependencies: "If order processing fails, inventory updates and shipping preparations should be cancelled",
         ai_responsibilities: [
           "Monitor business operations for failures",
-          "Cancel related operations when tool calls fail",
+          "Stop related operations when tool calls fail",
           "Ensure business consistency across systems",
-          "Handle cancellation operations manually"
+          "Handle operations manually and record in ledger"
         ],
         steps: [
           {

@@ -1,33 +1,34 @@
-# Tool Execution Planning & Cancellation System - Development TODO
+# Tool Execution Planning (Ledger-first) - Development TODO
 
 ## Project Overview
 
-This system is designed to help AI manage complex tool call sequences with contextual dependencies. It provides execution support for coordinating multiple tool calls and handling failures through manual cancellation actions.
+This system is designed to help AI manage sequential tool call sequences and keep a ledger of decisions and compensations. It provides execution support for coordinating multiple tool calls and recording manual actions.
 
 ## CRITICAL: Current System Limitations
 
 **This is NOT the microservices saga pattern.** This system manages "loose contextual connections" between tool calls.
 
 ### What This System Actually Does
-- Helps AI plan and execute sequences of tool calls
+- Helps AI plan and execute sequential sequences of tool calls
 - Tracks execution progress and status
-- Provides tools for manual cancellation when failures occur
-- Records cancellation actions for audit trails
+- Provides tools for manual action recording when failures occur
+- Records compensation actions in a ledger for audit trails
 - Manages contextual dependencies between related operations
 
 ### What This System Does NOT Do
 - No automatic rollback or compensation
 - No distributed transaction guarantees
 - No automatic retry mechanisms
-- No parallel execution (currently sequential only)
+- No parallel execution (sequential only)
+- No pause/resume functionality
 
 ## AI Responsibilities
 
-1. **Plan Design**: Create robust plans with cancellation strategies
+1. **Plan Design**: Create sequential plans with cancellability metadata
 2. **Execution Monitoring**: Continuously monitor execution status
-3. **Failure Handling**: Detect failures and manually invoke cancellation tools
+3. **Failure Handling**: Detect failures and manually decide actions
 4. **Contextual Awareness**: Consider how tool failures affect related operations
-5. **Manual Cancellation**: Execute cancellation actions when needed
+5. **Ledger Recording**: Record compensation actions in the ledger
 
 ## Completed Features
 
@@ -66,7 +67,7 @@ This system is designed to help AI manage complex tool call sequences with conte
 4. System tracks execution progress
 5. AI monitors status using `status` tool
 6. AI controls execution using `control` tool
-7. AI records cancellations using `record_compensation`
+7. AI records compensations using `record_compensation` (ledger)
 
 ## Current Status
 
@@ -97,10 +98,10 @@ The core system is now fully implemented and functional:
 ## Critical Warnings for AI Users
 
 1. **This is NOT the MSA Saga pattern** - No automatic rollback or distributed transaction guarantees
-2. **Manual Cancellation Required** - You must explicitly invoke cancellation tools when failures occur
+2. **Manual Action Required** - You must decide and execute actions when failures occur
 3. **Contextual Dependencies** - Always consider how tool failures affect related operations
 4. **Execution Monitoring** - Continuously monitor execution status to detect failures early
-5. **Cancellation-First Design** - Design plans with cancellation strategies from the beginning
+5. **Ledger-First Design** - Design plans with cancellability metadata and record actions
 
 ## Technical Notes
 

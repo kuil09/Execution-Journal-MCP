@@ -7,7 +7,7 @@ class ControlTool extends MCPTool<{
   execution_id: string;
 }> {
   name = "control";
-  description = "Control execution of a tool execution plan (pause, resume, cancel)";
+  description = "Control execution of a tool execution plan (cancel only)";
 
   schema = {
     action: {

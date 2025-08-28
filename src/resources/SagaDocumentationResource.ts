@@ -5,7 +5,7 @@ import path from "node:path";
 class ToolExecutionDocumentationResource extends MCPResource {
   uri = "resource://tool-execution/documentation";
   name = "Tool Execution Planning Documentation";
-  description = "Comprehensive documentation for tool execution planning and cancellation system";
+  description = "Comprehensive documentation for tool execution planning and ledger system";
   mimeType = "text/markdown";
 
   async read() {
@@ -18,7 +18,7 @@ class ToolExecutionDocumentationResource extends MCPResource {
         fs.readFile(todoPath, "utf-8").catch(() => "# TODO\n\nTask list not available")
       ]);
 
-      const combinedContent = `# Tool Execution Planning System (Simplified)
+      const combinedContent = `# Tool Execution Planning (Ledger-first) System Documentation
 
 ## Overview
 ${readmeContent.split("## ")[1] || "Tool execution planning implementation for MCP"}
