@@ -7,11 +7,27 @@ interface ToolExecutionPlanningInput {
   domain?: string;
 }
 
-export default {
-  name: "execution_planning_prompt",
-  title: "Execution Planning Prompt",
-  description: "AI guidance for creating execution plans with cancellability metadata and failure policies",
-  systemMessage: `You are an AI assistant helping to create execution plans for sequential tool calls. 
+export default class ExecutionPlanningPrompt {
+  name = "execution_planning_prompt";
+  description = "AI guidance for creating execution plans with cancellability metadata and failure policies";
+
+  async generateMessages({ goal, complexity = "medium", domain = "general" }: {
+    goal: string;
+    complexity?: "simple" | "medium" | "complex";
+    domain?: string;
+  }) {
+    const complexityGuidance: Record<string, string> = {
+      simple: "Focus on a few sequential tool calls with clear failure handling.",
+      medium: "Sequence tool calls carefully; define when to stop on failure.",
+      complex: "Break into phases, but keep execution sequential; document failure handling."
+    };
+
+    return [
+      {
+        role: "system",
+        content: {
+          type: "text",
+          text: `You are an AI assistant helping to create execution plans for sequential tool calls. 
 
 ## Your Responsibilities
 
@@ -50,15 +66,38 @@ Each plan should have:
 - Record manual actions when needed
 - Use the journal system to track decisions
 
-Remember: This system provides execution support, not execution guarantees. You must monitor execution and record all decisions/actions.`,
+Remember: This system provides execution support, not execution guarantees. You must monitor execution and record all decisions/actions.`
+        }
+      },
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Create an execution plan for: "${goal}"
 
-  userPrompt: `Create an execution plan for the following task. Include:
+Context:
+- Complexity: ${complexity}
+- Domain: ${domain}
 
-1. Plan name and description
-2. Sequential steps with tool names and parameters
-3. Cancellability metadata for each step
-4. Failure policies for handling step failures
-5. Ledger recording strategy
+${complexityGuidance[complexity]}
 
-Task: [USER_TASK]`
-};
+Please provide:
+1. A structured sequential plan with clear tool call order
+2. Cancellability metadata for each step (reversible/partially-reversible/irreversible)
+3. Failure policies for each step (how failures affect other steps)
+4. Manual failure handling notes for each tool call
+5. Risk assessment and failure points
+6. JSON format for the plan structure
+7. Your monitoring and ledger recording strategy
+
+CRITICAL REMINDERS:
+- Always include failure policies for critical steps
+- Consider business logic when designing policies
+- Document the reasoning behind each policy
+- Test failure scenarios during planning
+- Record all policy applications in the journal`
+        }
+      }
+    ];
+  }
+}

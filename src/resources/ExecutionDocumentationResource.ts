@@ -1,8 +1,11 @@
-export default {
-  name: "execution_documentation",
-  title: "Execution Journal Documentation",
-  description: "Comprehensive documentation for the execution journal system",
-  content: `# Execution Journal System Documentation
+export default class ExecutionDocumentationResource {
+  uri = "resource://execution-journal/documentation";
+  name = "Execution Journal Documentation";
+  description = "Comprehensive documentation for the execution journal system";
+  mimeType = "text/markdown";
+
+  async read() {
+    const content = `# Execution Journal System Documentation
 
 ## Overview
 
@@ -10,7 +13,7 @@ The Execution Journal is an MCP server that helps AI coordinate sequential tool 
 
 ## Core Concept
 
-**This is NOT the MSA Saga pattern for distributed transactions.** Instead, this system manages "loose contextual connections" between tool calls and provides a journal for recording AI decisions and actions.
+This system acts as a **durable memo pad** for AI actions and decisions. It doesn't execute rollbacks automatically - instead, it provides a comprehensive record of what was planned, what was executed, and what decisions were made along the way.
 
 ## System Architecture
 
@@ -45,6 +48,7 @@ Records a planned sequence of tool calls in the journal.
 - tool: Tool name to execute
 - parameters: Tool parameters
 - cancellable: Cancellability metadata
+- failure_policy: How failures affect other steps
 
 ### record_execution_start
 Records the start of plan execution in the journal.
@@ -88,12 +92,19 @@ Each step includes cancellability information:
 - **partially-reversible**: Can be partially undone
 - **irreversible**: Cannot be undone
 
+## Failure Policy Options
+
+- **cancel_all**: Cancel all remaining steps when this step fails
+- **cancel_dependent**: Cancel only steps that depend on this step
+- **continue_others**: Continue with other steps even if this fails
+- **manual_decision**: Require manual decision on how to proceed
+
 ## Best Practices
 
 1. **Plan Design**
    - Keep steps focused and atomic
    - Consider failure scenarios
-   - Design for manual intervention
+   - Design failure policies that make business sense
 
 2. **Execution Monitoring**
    - Monitor status continuously
@@ -115,9 +126,18 @@ Each step includes cancellability information:
 
 ## Example Workflow
 
-1. Create a plan with cancellability metadata
+1. Create a plan with cancellability metadata and failure policies
 2. Start execution and record in journal
 3. Monitor progress using query_ledger
 4. Record decisions and actions as they occur
-5. Use journal for audit trail and decision history`
-};
+5. Use journal for audit trail and decision history`;
+
+    return [
+      {
+        uri: this.uri,
+        mimeType: this.mimeType,
+        text: content,
+      },
+    ];
+  }
+}
