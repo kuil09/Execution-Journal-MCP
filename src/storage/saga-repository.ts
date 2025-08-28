@@ -75,4 +75,14 @@ export class SagaRepository {
     this.db.prepare(`INSERT INTO saga_events (event_id, saga_id, event_type, timestamp, data_json) VALUES (?, ?, ?, ?, ?)`)
       .run(id, event.saga_id, event.event_type, ts, event.data_json ?? null);
   }
+
+  queryEvents(sagaId: string): any[] {
+    const rows = this.db.prepare(`SELECT * FROM saga_events WHERE saga_id = ? ORDER BY timestamp ASC`).all(sagaId);
+    return rows.map((row: any) => ({
+      event_id: row.event_id,
+      event_type: row.event_type,
+      timestamp: row.timestamp,
+      data_json: row.data_json
+    }));
+  }
 }

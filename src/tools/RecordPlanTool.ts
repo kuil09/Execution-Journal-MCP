@@ -3,7 +3,7 @@ import { z } from "zod";
 import { PlanRepository, StoredPlan } from "../storage/plan-repository.js";
 import { v4 as uuidv4 } from "uuid";
 
-class SavePlanTool extends MCPTool<{
+class RecordPlanTool extends MCPTool<{
   plan: {
     name: string;
     description?: string;
@@ -12,11 +12,12 @@ class SavePlanTool extends MCPTool<{
       name: string;
       tool: string;
       parameters: Record<string, any>;
+      cancellable?: "reversible" | "partially-reversible" | "irreversible";
     }>;
   };
 }> {
-  name = "save_plan";
-  description = "Save a tool execution plan with contextual dependencies";
+  name = "record_plan";
+  description = "Record a planned sequence of tool calls in the ledger";
   private planRepo = new PlanRepository();
 
   schema = {
@@ -32,7 +33,7 @@ class SavePlanTool extends MCPTool<{
           cancellable: z.enum(["reversible", "partially-reversible", "irreversible"]).optional().describe("Whether and how this step can be cancelled (ledger use only)")
         })).describe("Array of steps to execute")
       }),
-      description: "The plan object to save"
+      description: "The plan object to record"
     }
   };
 
@@ -62,23 +63,28 @@ class SavePlanTool extends MCPTool<{
       return {
         content: [{
           type: "text",
-          text: `Plan "${input.plan.name}" saved successfully with ID: ${planId}
+          text: `Plan recorded successfully in ledger!
 
+Plan ID: ${planId}
+Name: ${input.plan.name}
 Steps: ${input.plan.steps.length}
-- ${input.plan.steps.map((step: any) => `${step.name} (${step.tool})`).join('\n- ')}
+- ${input.plan.steps.map((step: any) => `${step.name} (${step.tool})${step.cancellable ? ` [${step.cancellable}]` : ''}`).join('\n- ')}
 
-Note: This is a tool execution planning system, not the MSA Saga pattern.`
+Note: This system provides a ledger for recording plans and decisions.
+- Your plan has been recorded in the ledger
+- Each step includes cancellability metadata for tracking
+- Use query_ledger to monitor execution progress`
         }]
       };
     } catch (error) {
       return {
         content: [{
           type: "text",
-          text: `Error saving plan: ${error instanceof Error ? error.message : String(error)}`
+          text: `Error recording plan: ${error instanceof Error ? error.message : String(error)}`
         }]
       };
     }
   }
 }
 
-export default SavePlanTool;
+export default RecordPlanTool;

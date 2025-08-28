@@ -9,7 +9,7 @@ interface ToolExecutionPlanningInput {
 
 class ToolExecutionPlanningPrompt extends MCPPrompt<ToolExecutionPlanningInput> {
   name = "tool-execution-planning";
-  description = "Provides comprehensive guidance for creating tool execution plans with contextual dependencies";
+  description = "Provides comprehensive guidance for creating tool execution plans and recording them in the ledger";
 
   schema = {
     goal: {
@@ -31,7 +31,7 @@ class ToolExecutionPlanningPrompt extends MCPPrompt<ToolExecutionPlanningInput> 
 
   async generateMessages({ goal, complexity = "medium", domain = "general" }: ToolExecutionPlanningInput) {
     const complexityGuidance: Record<string, string> = {
-      simple: "Focus on a few sequential tool calls with clear error handling.",
+      simple: "Focus on a few sequential tool calls with clear failure handling.",
       medium: "Sequence tool calls carefully; define when to stop on failure.",
       complex: "Break into phases, but keep execution sequential; document failure handling."
     };

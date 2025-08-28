@@ -1,11 +1,11 @@
 import { MCPServer } from "mcp-framework";
 
 // Import tools, prompts, and resources
-import SavePlanTool from "./tools/SavePlanTool.js";
-import ExecutePlanTool from "./tools/ExecutePlanTool.js";
-import StatusTool from "./tools/StatusTool.js";
-import ControlTool from "./tools/ControlTool.js";
-import RecordCompensationTool from "./tools/RecordCompensationTool.js";
+import RecordPlanTool from "./tools/RecordPlanTool.js";
+import RecordExecutionStartTool from "./tools/RecordExecutionStartTool.js";
+import QueryLedgerTool from "./tools/QueryLedgerTool.js";
+import RecordDecisionTool from "./tools/RecordDecisionTool.js";
+import RecordActionTool from "./tools/RecordActionTool.js";
 import ToolExecutionPlanningPrompt from "./prompts/SagaPlanningPrompt.js";
 import ToolExecutionDocumentationResource from "./resources/SagaDocumentationResource.js";
 import ToolExecutionExamplesResource from "./resources/SagaExamplesResource.js";
@@ -57,17 +57,17 @@ switch (transportType) {
 try {
   // Try different registration methods based on MCP Framework version
   if ('tool' in server) {
-    (server as any).tool(SavePlanTool);
-    (server as any).tool(ExecutePlanTool);
-    (server as any).tool(StatusTool);
-    (server as any).tool(ControlTool);
-    (server as any).tool(RecordCompensationTool);
+    (server as any).tool(RecordPlanTool);
+    (server as any).tool(RecordExecutionStartTool);
+    (server as any).tool(QueryLedgerTool);
+    (server as any).tool(RecordDecisionTool);
+    (server as any).tool(RecordActionTool);
   } else if ('addTool' in server) {
-    (server as any).addTool(SavePlanTool);
-    (server as any).addTool(ExecutePlanTool);
-    (server as any).addTool(StatusTool);
-    (server as any).addTool(ControlTool);
-    (server as any).addTool(RecordCompensationTool);
+    (server as any).addTool(RecordPlanTool);
+    (server as any).addTool(RecordExecutionStartTool);
+    (server as any).addTool(QueryLedgerTool);
+    (server as any).addTool(RecordDecisionTool);
+    (server as any).addTool(RecordActionTool);
   }
   
   if ('prompt' in server) {

@@ -1,6 +1,6 @@
 # Tool Execution Planning (Ledger-first)
 
-An MCP server that helps AI coordinate sequential tool calls and keep a ledger of decisions and compensations. The system does not execute rollbacks; it provides a durable memo pad.
+An MCP server that helps AI coordinate sequential tool calls and keep a ledger of decisions and actions. The system does not execute rollbacks; it provides a durable memo pad.
 
 ## What This System Actually Does
 
@@ -22,17 +22,17 @@ This system provides **execution support** for complex tool call sequences, not 
 ## Available Tools
 
 ### Plan Management
-- **`save_plan`** - Save a sequential plan; each step may include `cancellable`
-- **`execute_plan`** - Execute a saved plan (sequential)
+- **`record_plan`** - Record a sequential plan; each step may include `cancellable`
+- **`record_execution_start`** - Record the start of plan execution (sequential)
 
 ### Execution Control
-- **`status`** - Check execution status and progress
-- **`control`** - Cancel execution
-- **`record_compensation`** - Append a ledger event about manual compensation/cancellation
+- **`query_ledger`** - Query the execution ledger for status, progress, and history
+- **`record_decision`** - Record a decision made during execution (stop/continue)
+- **`record_action`** - Append a ledger event about manual actions taken
 
 ## Usage Examples
 
-### 1. Save a Travel Planning Plan (with cancellability)
+### 1. Record a Travel Planning Plan (with cancellability)
 ```json
 {
   "plan": {
@@ -58,36 +58,39 @@ This system provides **execution support** for complex tool call sequences, not 
 }
 ```
 
-### 2. Execute the Plan
+### 2. Record Execution Start
 ```json
 {
-  "plan_id": "plan_abc123"
+  "plan_id": "plan_abc123",
+  "notes": "Starting vacation planning execution"
 }
 ```
 
-### 3. Check Status
+### 3. Query Ledger
 ```json
 {
   "execution_id": "exec_xyz789",
-  "include_step_details": true
+  "include_step_details": true,
+  "include_events": true
 }
 ```
 
-### 4. Control Execution
+### 4. Record Decision
 ```json
 {
-  "action": "cancel",
-  "execution_id": "exec_xyz789"
+  "action": "stop",
+  "execution_id": "exec_xyz789",
+  "reason": "Hotel booking failed, stopping related bookings"
 }
 ```
 
-### 5. Record Cancellation (Ledger)
+### 5. Record Action (Ledger)
 ```json
 {
   "execution_id": "exec_xyz789",
   "step_id": "book_hotel",
-  "reason": "Hotel unavailable for requested dates",
-  "action_taken": "Cancelled booking (manual via vendor portal)",
+  "action_type": "stopped",
+  "description": "Stopped hotel booking due to unavailability",
   "details": {"alternative_dates": "2024-08-01 to 2024-08-08"}
 }
 ```
@@ -97,11 +100,11 @@ This system provides **execution support** for complex tool call sequences, not 
 ```
 src/
 ├── tools/                    # Individual tool implementations
-│   ├── SavePlanTool.ts      # Plan saving functionality
-│   ├── ExecutePlanTool.ts   # Plan execution
-│   ├── StatusTool.ts        # Status monitoring
-│   ├── ControlTool.ts       # Execution control
-│   └── RecordCompensationTool.ts # Cancellation logging
+│   ├── RecordPlanTool.ts     # Plan recording functionality
+│   ├── RecordExecutionStartTool.ts   # Execution start recording
+│   ├── QueryLedgerTool.ts    # Ledger querying
+│   ├── RecordDecisionTool.ts # Decision recording
+│   └── RecordActionTool.ts   # Action logging
 ├── prompts/                  # AI guidance and templates
 │   └── ToolExecutionPlanningPrompt.ts
 ├── resources/                # Documentation and examples
@@ -152,14 +155,14 @@ Add this to your MCP client configuration:
 - **Simple Sequential Execution**
 - **Cancellability Metadata** per step (reversible/partially-reversible/irreversible)
 - **Execution Monitoring**: Status tracking
-- **Ledger**: Durable record of manual compensations/cancellations
+- **Ledger**: Durable record of manual decisions and actions
 
 ## Important Notes
 
 1. **This is NOT the MSA Saga pattern** - No automatic rollback or distributed transaction guarantees
-2. **AI Responsibility** - The AI must monitor execution and handle failures manually
+2. **AI Responsibility** - The AI must monitor execution and record all decisions/actions
 3. **Contextual Awareness** - Always consider how tool failures affect related operations
-4. **Cancellation First** - Design plans with cancellation strategies from the beginning
+4. **Ledger First** - Design plans with cancellability metadata and record all actions
 
 ## Development Status
 

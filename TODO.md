@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This system is designed to help AI manage sequential tool call sequences and keep a ledger of decisions and compensations. It provides execution support for coordinating multiple tool calls and recording manual actions.
+This system is designed to help AI manage sequential tool call sequences and keep a ledger of decisions and actions. It provides execution support for coordinating multiple tool calls and recording manual actions.
 
 ## CRITICAL: Current System Limitations
 
@@ -33,7 +33,7 @@ This system is designed to help AI manage sequential tool call sequences and kee
 ## Completed Features
 
 - ✅ Basic MCP server framework
-- ✅ Individual tool implementations (save_plan, execute_plan, status, control, record_compensation)
+- ✅ Individual tool implementations (record_plan, record_execution_start, query_ledger, record_decision, record_action)
 - ✅ MCP prompts for AI guidance
 - ✅ MCP resources for documentation and examples
 - ✅ Basic execution framework
@@ -46,6 +46,7 @@ This system is designed to help AI manage sequential tool call sequences and kee
 - ✅ Execution instance management
 - ✅ Tool integration with actual database operations
 - ✅ Complete execution tracking and monitoring
+- ✅ Ledger event recording system
 
 ## Planned Features (Simplified)
 
@@ -61,13 +62,13 @@ This system is designed to help AI manage sequential tool call sequences and kee
 - **MCP Integration**: Standard MCP server with tools, prompts, and resources
 
 ### Data Flow
-1. AI creates execution plan using `save_plan`
+1. AI creates execution plan using `record_plan`
 2. Plan is stored in database
-3. AI executes plan using `execute_plan`
+3. AI starts execution using `record_execution_start`
 4. System tracks execution progress
-5. AI monitors status using `status` tool
-6. AI controls execution using `control` tool
-7. AI records compensations using `record_compensation` (ledger)
+5. AI monitors status using `query_ledger`
+6. AI records decisions using `record_decision`
+7. AI records actions using `record_action` (ledger)
 
 ## Current Status
 
@@ -77,6 +78,7 @@ The core system is now fully implemented and functional:
 2. ✅ **Plan Persistence**: Complete plan storage and retrieval system
 3. ✅ **Execution Tracking**: Full execution progress tracking and monitoring
 4. ✅ **Core Error Handling**: Basic error handling and validation implemented
+5. ✅ **Ledger System**: Complete event recording and querying system
 
 ## Next Steps (Future Development)
 
@@ -94,6 +96,7 @@ The core system is now fully implemented and functional:
 - ✅ Plan persistence and retrieval working
 - ✅ Execution tracking and monitoring functional
 - ✅ Database schema created and initialized
+- ✅ Ledger events recorded and queryable
 
 ## Critical Warnings for AI Users
 
@@ -109,7 +112,7 @@ The core system is now fully implemented and functional:
 - Uses SQLite for data persistence
 - Implements standard MCP capabilities (tools, prompts, resources)
 - Designed for simplicity and clarity
-- Focuses on AI-driven execution management
+- Focuses on AI-driven execution management and ledger recording
 
 ## Future Considerations
 

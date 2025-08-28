@@ -30,70 +30,70 @@ ${todoContent.split("## ")[1] || "Status information not available"}
 
 ### What This System IS:
 - **Tool Execution Planning Infrastructure**: Tools, storage, and monitoring for managing tool call sequences
-- **Plan Management**: Save, load, and organize tool execution plans
-- **Basic Execution Control**: Start, pause, resume, cancel tool execution plans
+- **Plan Management**: Record, load, and organize tool execution plans
+- **Basic Execution Control**: Start and stop tool execution plans
 - **Status Monitoring**: Track execution progress and tool call results
-- **Cancellation Recording**: Log cancellation actions (but NOT execute them)
+- **Ledger Recording**: Log all decisions and actions (but NOT execute them)
 
 ### What This System is NOT:
 - **MSA Saga Pattern**: This is NOT the microservices saga pattern
 - **Execution Guarantee System**: Does NOT automatically ensure successful completion
-- **Auto-Recovery System**: Does NOT automatically handle failures or cancellations
-- **Parallel Executor**: Tools are called sequentially
+- **Auto-Recovery System**: Does NOT automatically handle failures or compensations
+- **Parallel Executor**: Tools are called sequentially (no parallel execution yet)
+- **Intelligent Retry System**: Basic retry only, no smart failure handling
 
 ## Key Concepts
 - **Execution Support, Not Execution Guarantee**: The system provides tools and infrastructure for robust tool execution planning, but AI must design resilient plans
-- **Cancellation-First Design**: Every tool call should have a corresponding cancellation action
-- **Failure Handling**: AI must explicitly handle failures and invoke cancellation tools
-- **Sequential Execution**: Tools are called one after another
+- **Ledger-First Design**: Every decision and action is recorded in the ledger
+- **Failure Handling**: AI must explicitly handle failures and record actions in the ledger
+- **Sequential Execution**: Tools are called one after another (parallel execution planned for future)
 - **Contextual Dependencies**: Manage relationships between tool calls (e.g., hotel booking failure affects car rental and activity bookings)
 
 ## AI Responsibilities (Critical for Success)
 
 ### 1. Plan Design
-- Create comprehensive plans with clear tool call sequences
-- Define cancellation actions for each tool call
-- Consider failure scenarios and cancellation strategies
+- Create comprehensive sequential plans with clear tool call sequences
+- Define cancellability metadata for each tool call
+- Consider failure scenarios and action strategies
 - Plan for manual intervention when tool calls fail
 - Identify contextual dependencies between tool calls
 
 ### 2. Failure Handling
 - Monitor execution status continuously
 - Detect when tool calls fail or timeout
-- Explicitly call cancellation tools when needed
-- Decide when to pause, resume, or cancel
+- Record decisions and actions in the ledger
+- Decide when to stop, continue, or take other actions
 - Understand the ripple effects of failures
 
-### 3. Cancellation Management
-- Record cancellation actions using record_compensation
-- Execute cancellation operations manually
+### 3. Ledger Management
+- Record all decisions using record_decision
+- Record all actions using record_action
 - Ensure data consistency through proper planning
-- Document what was cancelled and why
-- Handle contextual dependencies (if A fails, cancel B and C)
+- Document what was done and why
+- Handle contextual dependencies (if A fails, stop B and C)
 
 ## Usage Guidelines
 1. Always design plans with failure scenarios in mind
-2. Include cancellation actions for every tool call
+2. Include cancellability metadata for every tool call
 3. Test your plans with the available tools
 4. Monitor execution status and handle failures gracefully
 5. Be prepared to manually intervene when failures occur
 6. Consider the broader context: what other operations depend on this one?
 
 ## Current Limitations
-- **Sequential Execution**: Tools are called one after another
-- **Auto-cancellation**: Not implemented - AI must handle manually
+- **Sequential Execution**: Tools are called one after another (no parallel execution yet)
+- **Auto-compensation**: Not implemented - AI must handle manually
 - **Mock Tools**: Tools are simulated, not real external services
 
 ## What AI Should Know
-1. **This is a tool execution planning and management system**
-2. **You design the plans and handle failures**
-3. **Cancellation must be explicitly invoked**
+1. **This is a tool execution planning and ledger management system**
+2. **You design the plans and record all decisions/actions**
+3. **All actions must be recorded in the ledger**
 4. **Monitor execution status continuously**
 5. **Use the provided tools to manage your tool call sequences**
-6. **Success depends on your careful planning and monitoring**
-7. **This is NOT the MSA Saga pattern - it's a tool execution planning system**
-8. **Focus on contextual dependencies: understand how tool calls relate to each other**
-`;
+6. **Success depends on your careful planning and ledger recording**
+7. **This is NOT the MSA Saga pattern - it's a tool execution planning and ledger system**
+8. **Focus on contextual dependencies: understand how tool calls relate to each other**`;
 
       return [
         {
