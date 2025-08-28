@@ -137,4 +137,130 @@ class ToolExecutionExamplesResource extends MCPResource {
   }
 }
 
-export default ToolExecutionExamplesResource;
+export default {
+  name: "execution_examples",
+  title: "Execution Journal Examples",
+  description: "Example execution plans and workflows",
+  content: `# Execution Journal Examples
+
+## Example 1: Travel Booking Workflow
+
+### Plan: Summer Vacation Planning
+**Description**: Plan a complete summer vacation with hotel, car, and activities
+
+**Steps:**
+1. **Book Hotel** (reversible)
+   - Tool: book_hotel
+   - Parameters: destination, dates, room type
+   - Cancellable: "reversible"
+
+2. **Book Rental Car** (reversible)
+   - Tool: book_car
+   - Parameters: pickup location, dates, car type
+   - Cancellable: "reversible"
+
+3. **Book Activities** (partially-reversible)
+   - Tool: book_activities
+   - Parameters: destination, dates, activity types
+   - Cancellable: "partially-reversible"
+
+**AI Responsibilities:**
+- Monitor each booking step
+- Record actions in the journal if cancellations needed
+- Handle partial failures gracefully
+
+## Example 2: Database Migration Workflow
+
+### Plan: Production Database Migration
+**Description**: Safely migrate production database with backup and rollback capability
+
+**Steps:**
+1. **Create Backup** (reversible)
+   - Tool: create_backup
+   - Parameters: database_name, backup_location
+   - Cancellable: "reversible"
+
+2. **Run Migration** (irreversible)
+   - Tool: run_migration
+   - Parameters: migration_script, target_version
+   - Cancellable: "irreversible"
+
+3. **Verify Migration** (partially-reversible)
+   - Tool: verify_migration
+   - Parameters: test_queries, validation_rules
+   - Cancellable: "partially-reversible"
+
+4. **Send Notifications** (irreversible)
+   - Tool: send_notification
+   - Parameters: recipients, message
+   - Cancellable: "irreversible"
+
+**AI Responsibilities:**
+- Monitor backup creation success
+- Record decision to proceed with migration
+- Handle verification failures appropriately
+- Record all actions in the journal
+
+## Example 3: File Processing Workflow
+
+### Plan: Document Processing Pipeline
+**Description**: Process uploaded documents through validation, conversion, and storage
+
+**Steps:**
+1. **Validate Upload** (reversible)
+   - Tool: validate_document
+   - Parameters: file_path, validation_rules
+   - Cancellable: "reversible"
+
+2. **Convert Format** (partially-reversible)
+   - Tool: convert_document
+   - Parameters: source_format, target_format
+   - Cancellable: "partially-reversible"
+
+3. **Store Document** (reversible)
+   - Tool: store_document
+   - Parameters: storage_location, metadata
+   - Cancellable: "reversible"
+
+4. **Update Index** (reversible)
+   - Tool: update_index
+   - Parameters: document_id, search_terms
+   - Cancellable: "reversible"
+
+**AI Responsibilities:**
+- Monitor validation results
+- Record conversion attempts and results
+- Handle storage failures appropriately
+- Use journal for audit trail
+
+## Key Principles
+
+1. **Sequential Execution**: All examples show sequential tool execution
+2. **Cancellability Metadata**: Each step includes clear cancellability information
+3. **Journal Recording**: AI must record all decisions and actions
+4. **Manual Intervention**: Plan for manual handling of failures
+5. **Contextual Awareness**: Consider how failures affect subsequent steps
+
+## Best Practices
+
+- Always include cancellability metadata
+- Design for failure scenarios
+- Record decisions promptly in the journal
+- Monitor execution status continuously
+- Plan for manual intervention when needed
+
+## Warnings
+
+⚠️ **This is NOT the MSA Saga pattern**
+- No automatic rollback or compensation
+- AI must handle failures manually
+- Focus on recording actions, not executing them
+- System provides support, not guarantees
+
+## Notes
+
+- All examples use sequential tool execution
+- Journal recording is essential for audit trails
+- Cancellability metadata guides decision-making
+- Manual intervention is expected and should be recorded`
+};

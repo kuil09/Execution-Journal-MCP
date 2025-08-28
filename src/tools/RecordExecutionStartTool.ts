@@ -1,57 +1,25 @@
-import { MCPTool } from "mcp-framework";
 import { z } from "zod";
-import { sagaManager } from "../core/saga-manager.js";
+import { executionManager } from "../core/execution-manager.js";
 
-class RecordExecutionStartTool extends MCPTool<{
-  plan_id: string;
-  notes?: string;
-}> {
-  name = "record_execution_start";
-  description = "Record the start of plan execution in the ledger";
+const inputSchema = z.object({
+  plan_id: z.string().describe("ID of the plan to execute"),
+  notes: z.string().optional().describe("Optional notes about this execution")
+});
 
-  schema = {
-    plan_id: {
-      type: z.string(),
-      description: "ID of the plan to execute"
-    },
-    notes: {
-      type: z.string().optional(),
-      description: "Optional notes about this execution"
-    }
-  };
+export default class RecordExecutionStartTool {
+  static description = "Record the start of plan execution in the journal";
+  static inputSchema = inputSchema;
 
-  async execute(input: { plan_id: string; notes?: string }) {
-    try {
-      const execution = sagaManager.createSAGA(input.plan_id, {});
-      
-      // Start execution asynchronously
-      sagaManager.executeAsync(execution.id, {}).catch(() => {});
-      
-      return {
-        content: [{
-          type: "text",
-          text: `Execution start recorded in ledger!
-
-Execution ID: ${execution.id}
-Plan ID: ${input.plan_id}
-${input.notes ? `Notes: ${input.notes}` : ''}
-
-Note: This system provides a ledger for recording execution events.
-- Execution start has been recorded in the ledger
-- Tools are executed sequentially
-- Use query_ledger to monitor progress
-- Record decisions and actions as they occur`
-        }]
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: "text",
-          text: `Error recording execution start: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
+  static async invoke(input: z.infer<typeof inputSchema>) {
+    const execution = executionManager.createExecution(input.plan_id, {});
+    
+    // Start execution asynchronously
+    executionManager.executeAsync(execution.id, {}).catch(() => {});
+    
+    return {
+      message: "Execution start recorded in journal!",
+      execution_id: execution.id,
+      status: "started"
+    };
   }
 }
-
-export default RecordExecutionStartTool;

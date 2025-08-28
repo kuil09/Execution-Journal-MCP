@@ -1,93 +1,59 @@
-import { MCPTool } from "mcp-framework";
 import { z } from "zod";
-import { sagaManager } from "../core/saga-manager.js";
-import { SagaRepository } from "../storage/saga-repository.js";
+import { ExecutionRepository } from "../storage/execution-repository.js";
 
-class QueryLedgerTool extends MCPTool<{
-  execution_id: string;
-  include_step_details?: boolean;
-  include_events?: boolean;
-}> {
-  name = "query_ledger";
-  description = "Query the execution ledger for status, progress, and history";
-  private sagaRepo = new SagaRepository();
+const inputSchema = z.object({
+  execution_id: z.string().describe("ID of the execution to query"),
+  include_step_details: z.boolean().optional().describe("Include detailed step information"),
+  include_events: z.boolean().optional().describe("Include journal events")
+});
 
-  schema = {
-    execution_id: {
-      type: z.string(),
-      description: "ID of the execution to query"
-    },
-    include_step_details: {
-      type: z.boolean().optional(),
-      description: "Whether to include detailed step information"
-    },
-    include_events: {
-      type: z.boolean().optional(),
-      description: "Whether to include ledger events history"
-    }
-  };
+export default class QueryLedgerTool {
+  static description = "Query the execution journal for status, progress, and history";
+  static inputSchema = inputSchema;
 
-  async execute(input: { execution_id: string; include_step_details?: boolean; include_events?: boolean }) {
-    try {
-      const sagaStatus = sagaManager.getSAGA(input.execution_id);
-      
-      if (!sagaStatus) {
-        return {
-          content: [{
-            type: "text",
-            text: `Execution not found: ${input.execution_id}`
-          }]
-        };
-      }
-      
-      let statusText = `Ledger Query Results: ${sagaStatus.execution_id}
+  private executionRepo = new ExecutionRepository();
 
-Plan: ${sagaStatus.plan_name || sagaStatus.plan_id}
-Status: ${sagaStatus.status}
-Progress: ${sagaStatus.progress}
-Current Step: ${sagaStatus.current_step || 'N/A'}
-Started: ${sagaStatus.started_at || 'Not started'}
-${sagaStatus.completed_at ? `Completed: ${sagaStatus.completed_at}` : ''}
-${sagaStatus.error ? `Error: ${sagaStatus.error}` : ''}`;
-
-      if (input.include_step_details && sagaStatus.steps) {
-        statusText += `\n\nStep Details:
-${sagaStatus.steps.map((step: any, index: number) => 
-  `${index + 1}. ${step.name || step.step_id} (${step.tool_name}) - ${step.status}${step.error ? ` [Error: ${step.error}]` : ''}`
-).join('\n')}`;
-      }
-
-      if (input.include_events) {
-        // Query ledger events
-        const events = this.sagaRepo.queryEvents(input.execution_id);
-        if (events && events.length > 0) {
-          statusText += `\n\nLedger Events:
-${events.map((event: any, index: number) => 
-  `${index + 1}. ${event.event_type} - ${event.timestamp}${event.data_json ? ` - ${JSON.parse(event.data_json).description || 'No description'}` : ''}`
-).join('\n')}`;
-        }
-      }
-
-      statusText += `\n\nNote: This system provides a ledger for recording decisions and actions.
-- Monitor status continuously to detect failures
-- Record decisions and actions using the ledger tools
-- Each step has metadata for tracking cancellability`;
-
+  static async invoke(input: z.infer<typeof inputSchema>) {
+    const tool = new QueryLedgerTool();
+    
+    const data = tool.executionRepo.getWithSteps(input.execution_id);
+    if (!data) {
       return {
-        content: [{
-          type: "text",
-          text: statusText
-        }]
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: "text",
-          text: `Error querying ledger: ${error instanceof Error ? error.message : String(error)}`
-        }]
+        message: "Execution not found",
+        execution_id: input.execution_id
       };
     }
+
+    const { instance, steps } = data;
+    const progress = `${steps.filter(s => s.status === "completed").length}/${steps.length} steps`;
+    
+    let events = [];
+    if (input.include_events) {
+      events = tool.executionRepo.queryEvents(input.execution_id);
+    }
+
+    return {
+      message: "Journal Query Results",
+      execution_id: instance.id,
+      plan_id: instance.plan_id,
+      status: instance.status,
+      current_step: instance.current_step,
+      progress,
+      started_at: instance.started_at,
+      completed_at: instance.completed_at,
+      error: instance.error,
+      steps: input.include_step_details ? steps.map(s => ({
+        step_id: s.step_id,
+        name: s.name,
+        tool_name: s.tool_name,
+        status: s.status,
+        started_at: s.started_at,
+        completed_at: s.completed_at,
+        result: s.result_json ? JSON.parse(s.result_json) : undefined,
+        error: s.error,
+        cancellable: s.cancellable
+      })) : undefined,
+      events: events.length > 0 ? events : undefined
+    };
   }
 }
-
-export default QueryLedgerTool;

@@ -1,95 +1,65 @@
-import { MCPTool } from "mcp-framework";
 import { z } from "zod";
-import { sagaManager } from "../core/saga-manager.js";
-import { SagaRepository } from "../storage/saga-repository.js";
+import { executionManager } from "../core/execution-manager.js";
+import { ExecutionRepository } from "../storage/execution-repository.js";
 
-class RecordDecisionTool extends MCPTool<{
-  action: "stop" | "continue";
-  execution_id: string;
-  reason: string;
-  details?: Record<string, any>;
-}> {
-  name = "record_decision";
-  description = "Record a decision made during execution (stop/continue) in the ledger";
-  private sagaRepo = new SagaRepository();
+const inputSchema = z.object({
+  execution_id: z.string().describe("ID of the execution to control"),
+  action: z.enum(["stop", "continue"]).describe("Action to take: stop or continue"),
+  reason: z.string().describe("Reason for this decision"),
+  details: z.string().optional().describe("Additional details about the decision")
+});
 
-  schema = {
-    action: {
-      type: z.enum(["stop", "continue"]),
-      description: "Decision made about execution"
-    },
-    execution_id: {
-      type: z.string(),
-      description: "ID of the execution where the decision was made"
-    },
-    reason: {
-      type: z.string(),
-      description: "Reason for the decision"
-    },
-    details: {
-      type: z.record(z.any()).optional(),
-      description: "Additional details about the decision"
-    }
-  };
+export default class RecordDecisionTool {
+  static description = "Record a decision made during execution (stop/continue) in the journal";
+  static inputSchema = inputSchema;
 
-  async execute(input: { action: "stop" | "continue"; execution_id: string; reason: string; details?: any }) {
-    try {
-      let result;
-      let resultText = "";
-      
-      // Record decision in ledger first
-      this.sagaRepo.insertEvent({
-        saga_id: input.execution_id,
-        event_type: "decision_made",
-        timestamp: new Date().toISOString(),
+  private executionRepo = new ExecutionRepository();
+
+  static async invoke(input: z.infer<typeof inputSchema>) {
+    const tool = new RecordDecisionTool();
+    
+    if (input.action === "stop") {
+      // Record the decision in the journal
+      tool.executionRepo.insertEvent({
+        execution_id: input.execution_id,
+        event_type: "decision_recorded",
         data_json: JSON.stringify({
-          action: input.action,
+          action: "stop",
           reason: input.reason,
-          details: input.details ?? null
+          details: input.details,
+          timestamp: new Date().toISOString()
         })
       });
-      
-      switch (input.action) {
-        case "stop":
-          result = sagaManager.cancelSAGA(input.execution_id);
-          resultText = `Decision recorded: Execution ${result.id} stopped.
-Current Status: ${result.status}
-Reason: ${input.reason}
 
-Note: This system provides a ledger for recording decisions.
-- Your decision to stop has been recorded
-- Execution is stopped but not automatically rolled back
-- You must manually handle any cleanup needed
-- Use record_action to log what cleanup was performed`;
-          break;
-          
-        case "continue":
-          resultText = `Decision recorded: Execution ${input.execution_id} marked for continuation.
-Reason: ${input.reason}
-
-Note: This system provides a ledger for recording decisions.
-- Your decision to continue has been recorded
-- Execution continues from current state
-- Monitor status to ensure smooth continuation
-- Be prepared to handle any failures that occur`;
-          break;
-      }
+      // Cancel the execution
+      const result = executionManager.cancelExecution(input.execution_id);
       
       return {
-        content: [{
-          type: "text",
-          text: resultText
-        }]
+        message: "Decision recorded: Execution stopped",
+        execution_id: input.execution_id,
+        action: "stop",
+        reason: input.reason,
+        cancelled: result
       };
-    } catch (error) {
+    } else {
+      // Record the decision to continue
+      tool.executionRepo.insertEvent({
+        execution_id: input.execution_id,
+        event_type: "decision_recorded",
+        data_json: JSON.stringify({
+          action: "continue",
+          reason: input.reason,
+          details: input.details,
+          timestamp: new Date().toISOString()
+        })
+      });
+
       return {
-        content: [{
-          type: "text",
-          text: `Error recording decision: ${error instanceof Error ? error.message : String(error)}`
-        }]
+        message: "Decision recorded: Execution will continue",
+        execution_id: input.execution_id,
+        action: "continue",
+        reason: input.reason
       };
     }
   }
 }
-
-export default RecordDecisionTool;

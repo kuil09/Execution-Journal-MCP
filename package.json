@@ -1,11 +1,11 @@
 {
-  "name": "tool-execution-planner",
+  "name": "execution-journal",
   "version": "0.0.1",
   "type": "module",
-  "description": "Tool Execution Planning (Ledger-first) - MCP server for managing sequential tool calls with ledger recording",
+  "description": "Execution Journal - MCP server for recording AI-driven tool execution workflows and decisions",
   "main": "dist/index.js",
   "bin": {
-    "tool-execution-planner": "./dist/index.js"
+    "execution-journal": "./dist/index.js"
   },
   "scripts": {
     "build": "npm run clean && tsc && mcp-build",
@@ -28,9 +28,9 @@
   },
   "keywords": [
     "mcp",
-    "tool-execution",
-    "planning",
-    "ledger",
+    "execution-journal",
+    "workflow-recording",
+    "ai-tools",
     "sequential-execution"
   ],
   "author": "Your Name",

@@ -1,6 +1,6 @@
-# Tool Execution Planning (Ledger-first)
+# Execution Journal
 
-An MCP server that helps AI coordinate sequential tool calls and keep a ledger of decisions and actions. The system does not execute rollbacks; it provides a durable memo pad.
+An MCP server that helps AI coordinate sequential tool calls and keep a journal of decisions and actions. The system does not execute rollbacks; it provides a durable record of execution workflows.
 
 ## What This System Actually Does
 
@@ -8,15 +8,15 @@ An MCP server that helps AI coordinate sequential tool calls and keep a ledger o
 
 - If a "travel booking" tool call fails, a contextually linked next step should be stopped
 - If a "database migration" fails, related "backup creation" and "notification sending" should be reconsidered
-- The AI is responsible for detecting failures and manually deciding actions; the server records them (ledger)
+- The AI is responsible for detecting failures and manually deciding actions; the server records them (journal)
 
-## Core Concept: Execution Support, Not Execution Guarantee (Ledger)
+## Core Concept: Execution Support, Not Execution Guarantee (Journal)
 
 This system provides **execution support** for complex tool call sequences, not automatic execution guarantees. The AI must:
 
 - Design sequential plans and declare which steps are cancellable
 - Monitor execution status
-- Handle failures manually and record actions using the ledger
+- Handle failures manually and record actions using the journal
 - Consider contextual dependencies between tool calls
 
 ## Available Tools
@@ -26,9 +26,9 @@ This system provides **execution support** for complex tool call sequences, not 
 - **`record_execution_start`** - Record the start of plan execution (sequential)
 
 ### Execution Control
-- **`query_ledger`** - Query the execution ledger for status, progress, and history
+- **`query_ledger`** - Query the execution journal for status, progress, and history
 - **`record_decision`** - Record a decision made during execution (stop/continue)
-- **`record_action`** - Append a ledger event about manual actions taken
+- **`record_action`** - Append a journal entry about manual actions taken
 
 ## Usage Examples
 
@@ -66,7 +66,7 @@ This system provides **execution support** for complex tool call sequences, not 
 }
 ```
 
-### 3. Query Ledger
+### 3. Query Journal
 ```json
 {
   "execution_id": "exec_xyz789",
@@ -84,7 +84,7 @@ This system provides **execution support** for complex tool call sequences, not 
 }
 ```
 
-### 5. Record Action (Ledger)
+### 5. Record Action (Journal)
 ```json
 {
   "execution_id": "exec_xyz789",
@@ -102,7 +102,7 @@ src/
 ├── tools/                    # Individual tool implementations
 │   ├── RecordPlanTool.ts     # Plan recording functionality
 │   ├── RecordExecutionStartTool.ts   # Execution start recording
-│   ├── QueryLedgerTool.ts    # Ledger querying
+│   ├── QueryLedgerTool.ts    # Journal querying
 │   ├── RecordDecisionTool.ts # Decision recording
 │   └── RecordActionTool.ts   # Action logging
 ├── prompts/                  # AI guidance and templates
@@ -122,7 +122,7 @@ src/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd Saga-MCP
+cd execution-journal
 
 # Install dependencies
 npm install
@@ -141,7 +141,7 @@ Add this to your MCP client configuration:
 ```json
 {
   "mcpServers": {
-    "tool-execution-planner": {
+    "execution-journal": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {}
@@ -155,21 +155,21 @@ Add this to your MCP client configuration:
 - **Simple Sequential Execution**
 - **Cancellability Metadata** per step (reversible/partially-reversible/irreversible)
 - **Execution Monitoring**: Status tracking
-- **Ledger**: Durable record of manual decisions and actions
+- **Journal**: Durable record of manual decisions and actions
 
 ## Important Notes
 
 1. **This is NOT the MSA Saga pattern** - No automatic rollback or distributed transaction guarantees
 2. **AI Responsibility** - The AI must monitor execution and record all decisions/actions
 3. **Contextual Awareness** - Always consider how tool failures affect related operations
-4. **Ledger First** - Design plans with cancellability metadata and record all actions
+4. **Journal First** - Design plans with cancellability metadata and record all actions
 
 ## Development Status
 
 - ✅ Core tools implemented
 - ✅ MCP prompts and resources
 - ✅ Basic execution framework
-- ✅ Database-backed ledger events
+- ✅ Database-backed journal events
 
 ## Contributing
 
