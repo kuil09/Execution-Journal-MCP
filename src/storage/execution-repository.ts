@@ -12,6 +12,7 @@ export interface ExecutionStepRow {
   result_json?: string;
   error?: string;
   cancellable?: string;
+  failure_policy_json?: string;
 }
 
 export interface ExecutionInstanceRow {
@@ -32,10 +33,10 @@ export class ExecutionRepository {
       instance.id, instance.plan_id, instance.status, instance.current_step, instance.created_at, instance.updated_at, instance.started_at, instance.completed_at, instance.error
     );
 
-    const stepStmt = this.db.prepare(`INSERT INTO execution_steps (execution_id, step_id, name, tool_name, status, started_at, completed_at, result_json, error, cancellable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    const stepStmt = this.db.prepare(`INSERT INTO execution_steps (execution_id, step_id, name, tool_name, status, started_at, completed_at, result_json, error, cancellable, failure_policy_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     for (const step of steps) {
       stepStmt.run(
-        step.execution_id, step.step_id, step.name ?? null, step.tool_name, step.status, step.started_at ?? null, step.completed_at ?? null, step.result_json ?? null, step.error ?? null, step.cancellable ?? null
+        step.execution_id, step.step_id, step.name ?? null, step.tool_name, step.status, step.started_at ?? null, step.completed_at ?? null, step.result_json ?? null, step.error ?? null, step.cancellable ?? null, step.failure_policy_json ?? null
       );
     }
   }
@@ -51,8 +52,8 @@ export class ExecutionRepository {
   }
 
   upsertStep(step: ExecutionStepRow): void {
-    this.db.prepare(`INSERT INTO execution_steps (execution_id, step_id, name, tool_name, status, started_at, completed_at, result_json, error, cancellable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(execution_id, step_id) DO UPDATE SET name=excluded.name, tool_name=excluded.tool_name, status=excluded.status, started_at=excluded.started_at, completed_at=excluded.completed_at, result_json=excluded.result_json, error=excluded.error, cancellable=excluded.cancellable`).run(
-      step.execution_id, step.step_id, step.name ?? null, step.tool_name, step.status, step.started_at ?? null, step.completed_at ?? null, step.result_json ?? null, step.error ?? null, step.cancellable ?? null
+    this.db.prepare(`INSERT INTO execution_steps (execution_id, step_id, name, tool_name, status, started_at, completed_at, result_json, error, cancellable, failure_policy_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(execution_id, step_id) DO UPDATE SET name=excluded.name, tool_name=excluded.tool_name, status=excluded.status, started_at=excluded.started_at, completed_at=excluded.completed_at, result_json=excluded.result_json, error=excluded.error, cancellable=excluded.cancellable, failure_policy_json=excluded.failure_policy_json`).run(
+      step.execution_id, step.step_id, step.name ?? null, step.tool_name, step.status, step.started_at ?? null, step.completed_at ?? null, step.result_json ?? null, step.error ?? null, step.cancellable ?? null, step.failure_policy_json ?? null
     );
   }
 

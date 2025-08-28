@@ -11,6 +11,7 @@ An MCP server that helps AI coordinate sequential tool calls and maintain a comp
 - **Decision Recording**: Log all decisions made during execution
 - **Action Journal**: Record manual actions taken for audit trails
 - **Contextual Awareness**: Understand relationships between tool calls
+- **Failure Policies**: Define how failures in one step affect other steps
 
 ## Core Concept
 
@@ -19,7 +20,7 @@ This system acts as a **durable memo pad** for AI actions and decisions. It does
 ## Available Tools
 
 ### Plan Management
-- **`record_plan`** - Create and store execution plans with cancellability metadata
+- **`record_plan`** - Create and store execution plans with cancellability metadata and failure policies
 - **`record_execution_start`** - Start executing a plan and track progress
 
 ### Execution Control
@@ -40,14 +41,24 @@ This system acts as a **durable memo pad** for AI actions and decisions. It does
       "name": "Book Hotel",
       "tool": "book_hotel",
       "parameters": {"destination": "Paris", "dates": "2024-07-15 to 2024-07-22"},
-      "cancellable": "partially-reversible"
+      "cancellable": "partially-reversible",
+      "failure_policy": {
+        "propagate_to": ["book_car", "book_activities"],
+        "action": "cancel_dependent",
+        "reason": "Hotel is essential for vacation planning"
+      }
     },
     {
       "id": "book_car",
       "name": "Book Rental Car",
       "tool": "book_car",
       "parameters": {"pickup_location": "Paris Airport", "dates": "2024-07-15 to 2024-07-22"},
-      "cancellable": "reversible"
+      "cancellable": "reversible",
+      "failure_policy": {
+        "propagate_to": ["book_activities"],
+        "action": "continue_others",
+        "reason": "Car is nice to have but not essential"
+      }
     }
   ]
 }
@@ -138,6 +149,7 @@ Add this to your MCP client configuration:
 
 - **Sequential Execution**: Tools are called one after another
 - **Cancellability Metadata**: Each step indicates reversibility level
+- **Failure Policies**: Define how failures propagate to other steps
 - **Comprehensive Journaling**: All decisions and actions are recorded
 - **Execution Monitoring**: Real-time status tracking
 - **Audit Trail**: Complete history for compliance and debugging
@@ -148,19 +160,28 @@ Add this to your MCP client configuration:
 - **`partially-reversible`**: Can be partially undone  
 - **`irreversible`**: Cannot be undone
 
+## Failure Policy Options
+
+- **`cancel_all`**: Cancel all remaining steps when this step fails
+- **`cancel_dependent`**: Cancel only steps that depend on this step
+- **`continue_others`**: Continue with other steps even if this fails
+- **`manual_decision`**: Require manual decision on how to proceed
+
 ## Best Practices
 
 1. **Plan Design**: Keep steps focused and consider failure scenarios
-2. **Monitoring**: Check execution status regularly
-3. **Decision Recording**: Log all decisions promptly
-4. **Action Documentation**: Record what was done and why
-5. **Context Awareness**: Understand how tool failures affect related operations
+2. **Failure Policies**: Design policies that make business sense
+3. **Monitoring**: Check execution status regularly
+4. **Decision Recording**: Log all decisions promptly
+5. **Action Documentation**: Record what was done and why
+6. **Context Awareness**: Understand how tool failures affect related operations
 
 ## Development Status
 
 - ✅ Core tools implemented
 - ✅ MCP integration complete
 - ✅ Database-backed journaling
+- ✅ Failure policy support
 - ✅ Comprehensive documentation
 
 ## Contributing

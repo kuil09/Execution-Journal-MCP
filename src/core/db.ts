@@ -52,6 +52,7 @@ db.exec(`
     result_json TEXT,
     error TEXT,
     cancellable TEXT,
+    failure_policy_json TEXT,
     PRIMARY KEY (execution_id, step_id),
     FOREIGN KEY (execution_id) REFERENCES execution_instances(id)
   );

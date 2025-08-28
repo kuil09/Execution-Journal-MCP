@@ -10,7 +10,12 @@ const inputSchema = z.object({
     name: z.string().describe("Human-readable name for this step"),
     tool: z.string().describe("Name of the tool to execute"),
     parameters: z.record(z.any()).describe("Parameters to pass to the tool"),
-    cancellable: z.enum(["reversible", "partially-reversible", "irreversible"]).describe("Whether this step can be cancelled/undone")
+    cancellable: z.enum(["reversible", "partially-reversible", "irreversible"]).describe("Whether this step can be cancelled/undone"),
+    failure_policy: z.object({
+      propagate_to: z.array(z.string()).describe("IDs of steps that should be affected by this step's failure"),
+      action: z.enum(["cancel_all", "cancel_dependent", "continue_others", "manual_decision"]).describe("What to do with affected steps when this step fails"),
+      reason: z.string().describe("Why this failure policy was chosen")
+    }).optional().describe("Policy for handling failures and their impact on other steps")
   })).describe("Sequential steps to execute")
 });
 
@@ -41,7 +46,8 @@ export default class RecordPlanTool {
         plan_id: planId,
         name: input.name,
         steps_count: input.steps.length,
-        created_at: now
+        created_at: now,
+        failure_policies_defined: input.steps.filter(step => step.failure_policy).length
       };
     } catch (error) {
       return {

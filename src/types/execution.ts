@@ -4,6 +4,11 @@ export interface ExecutionStep {
   tool: string;
   parameters: Record<string, any>;
   cancellable?: "reversible" | "partially-reversible" | "irreversible";
+  failure_policy?: {
+    propagate_to: string[];  // IDs of steps that should be affected by this step's failure
+    action: "cancel_all" | "cancel_dependent" | "continue_others" | "manual_decision";
+    reason: string;  // Why this policy was chosen
+  };
 }
 
 export interface ExecutionPlan {
@@ -35,6 +40,7 @@ export interface ExecutionStepRow {
   result_json?: string;
   error?: string;
   cancellable?: string;
+  failure_policy_json?: string;  // JSON string of failure policy
 }
 
 export interface ExecutionInstanceRow {
