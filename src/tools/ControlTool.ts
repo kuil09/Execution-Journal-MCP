@@ -3,60 +3,30 @@ import { z } from "zod";
 import { sagaManager } from "../core/saga-manager.js";
 
 class ControlTool extends MCPTool<{
-  action: "pause" | "resume" | "cancel";
+  action: "cancel";
   execution_id: string;
-  execution_options?: Record<string, any>;
 }> {
   name = "control";
   description = "Control execution of a tool execution plan (pause, resume, cancel)";
 
   schema = {
     action: {
-      type: z.enum(["pause", "resume", "cancel"]),
+      type: z.enum(["cancel"]),
       description: "Action to perform on the execution"
     },
     execution_id: {
       type: z.string(),
       description: "ID of the execution to control"
     },
-    execution_options: {
-      type: z.record(z.any()).optional(),
-      description: "Optional execution options for resume action"
-    }
+    // simplified: cancel only
   };
 
-  async execute(input: { action: "pause" | "resume" | "cancel"; execution_id: string; execution_options?: any }) {
+  async execute(input: { action: "cancel"; execution_id: string }) {
     try {
       let result;
       let resultText = "";
       
       switch (input.action) {
-        case "pause":
-          result = sagaManager.pauseSAGA(input.execution_id);
-          resultText = `Execution ${result.id} paused successfully.
-Current Status: ${result.status}
-
-Note: This is a tool execution planning system, not the MSA Saga pattern.
-- Execution is paused but not rolled back
-- You can resume from the current state
-- Monitor the execution to understand why it was paused
-- Consider if cancellation is needed instead of just pausing`;
-          break;
-          
-        case "resume":
-          result = sagaManager.resumeSAGA(input.execution_id, input.execution_options || {});
-          resultText = `Execution ${result.id} resumed successfully.
-Current Status: ${result.status}
-
-Options: ${JSON.stringify(input.execution_options || {}, null, 2)}
-
-Note: This is a tool execution planning system, not the MSA Saga pattern.
-- Execution continues from where it was paused
-- Previous steps are not re-executed
-- Monitor status to ensure smooth continuation
-- Be prepared to handle any failures that occur`;
-          break;
-          
         case "cancel":
           result = sagaManager.cancelSAGA(input.execution_id);
           resultText = `Execution ${result.id} cancelled successfully.

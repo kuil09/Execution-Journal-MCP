@@ -18,7 +18,7 @@ class ToolExecutionDocumentationResource extends MCPResource {
         fs.readFile(todoPath, "utf-8").catch(() => "# TODO\n\nTask list not available")
       ]);
 
-      const combinedContent = `# Tool Execution Planning & Cancellation System Documentation
+      const combinedContent = `# Tool Execution Planning System (Simplified)
 
 ## Overview
 ${readmeContent.split("## ")[1] || "Tool execution planning implementation for MCP"}
@@ -39,14 +39,13 @@ ${todoContent.split("## ")[1] || "Status information not available"}
 - **MSA Saga Pattern**: This is NOT the microservices saga pattern
 - **Execution Guarantee System**: Does NOT automatically ensure successful completion
 - **Auto-Recovery System**: Does NOT automatically handle failures or cancellations
-- **Parallel Executor**: Tools are called sequentially (no parallel execution yet)
-- **Intelligent Retry System**: Basic retry only, no smart failure handling
+- **Parallel Executor**: Tools are called sequentially
 
 ## Key Concepts
 - **Execution Support, Not Execution Guarantee**: The system provides tools and infrastructure for robust tool execution planning, but AI must design resilient plans
 - **Cancellation-First Design**: Every tool call should have a corresponding cancellation action
 - **Failure Handling**: AI must explicitly handle failures and invoke cancellation tools
-- **Sequential Execution**: Tools are called one after another (parallel execution planned for future)
+- **Sequential Execution**: Tools are called one after another
 - **Contextual Dependencies**: Manage relationships between tool calls (e.g., hotel booking failure affects car rental and activity bookings)
 
 ## AI Responsibilities (Critical for Success)
@@ -81,9 +80,8 @@ ${todoContent.split("## ")[1] || "Status information not available"}
 6. Consider the broader context: what other operations depend on this one?
 
 ## Current Limitations
-- **Sequential Execution**: Tools are called one after another (no parallel execution yet)
+- **Sequential Execution**: Tools are called one after another
 - **Auto-cancellation**: Not implemented - AI must handle manually
-- **Retry Logic**: Basic retry in tool coordinator only
 - **Mock Tools**: Tools are simulated, not real external services
 
 ## What AI Should Know

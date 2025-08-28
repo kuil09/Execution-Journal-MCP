@@ -31,9 +31,9 @@ class ToolExecutionPlanningPrompt extends MCPPrompt<ToolExecutionPlanningInput> 
 
   async generateMessages({ goal, complexity = "medium", domain = "general" }: ToolExecutionPlanningInput) {
     const complexityGuidance: Record<string, string> = {
-      simple: "For simple operations, focus on 2-3 sequential tool calls with basic error handling.",
-      medium: "For medium complexity, consider tool call sequences and include cancellation logic.",
-      complex: "For complex operations, break down into logical phases and ensure comprehensive cancellation strategies."
+      simple: "Focus on a few sequential tool calls with clear error handling.",
+      medium: "Sequence tool calls carefully; define when to stop on failure.",
+      complex: "Break into phases, but keep execution sequential; document failure handling."
     };
 
     return [
@@ -72,21 +72,20 @@ Context:
 ${complexityGuidance[complexity]}
 
 Please provide:
-1. A structured plan with clear tool call sequences
-2. Dependencies between tool calls (if any) - Note: Currently executed sequentially
-3. Cancellation actions for each tool call - YOU must execute these manually
+1. A structured plan with clear sequential tool call order
+2. Note where earlier results are required by later steps
+3. Manual failure handling notes for each tool call (what to do if it fails)
 4. Risk assessment and failure points
 5. JSON format for the plan structure
 6. Your monitoring and failure handling strategy
 
 CRITICAL REMINDERS:
 - This system provides tools and infrastructure for managing tool call sequences
-- Always include cancellation actions for every tool call
 - Plan for manual intervention when tool calls fail
 - Monitor execution status continuously
 - Be prepared to call cancellation tools explicitly
 - This is NOT the MSA Saga pattern - it's a tool execution planning system
-- Focus on contextual dependencies: if one tool call fails, what other tool calls need to be cancelled?
+- Focus on contextual dependencies: if one tool call fails, what should be stopped next?
 
 Remember: This system provides execution SUPPORT, not execution GUARANTEES. You must design robust plans and handle failures explicitly.`
         }

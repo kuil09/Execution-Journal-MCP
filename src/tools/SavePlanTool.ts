@@ -12,10 +12,6 @@ class SavePlanTool extends MCPTool<{
       name: string;
       tool: string;
       parameters: Record<string, any>;
-      cancellation?: {
-        tool: string;
-        parameters: Record<string, any>;
-      };
     }>;
   };
 }> {
@@ -32,12 +28,7 @@ class SavePlanTool extends MCPTool<{
           id: z.string().describe("Unique identifier for the step"),
           name: z.string().describe("Human-readable name for the step"),
           tool: z.string().describe("Tool to be called"),
-          tool_name: z.string().describe("Tool name (alias for tool field)").optional(),
           parameters: z.record(z.any()).describe("Parameters for the tool"),
-          cancellation: z.object({
-            tool: z.string().describe("Tool to call for cancellation"),
-            parameters: z.record(z.any()).describe("Parameters for the cancellation tool")
-          }).optional().describe("Cancellation action for this step")
         })).describe("Array of steps to execute")
       }),
       description: "The plan object to save"
@@ -49,10 +40,12 @@ class SavePlanTool extends MCPTool<{
       const planId = `plan_${uuidv4()}`;
       const now = new Date().toISOString();
       
-      // Normalize steps to ensure tool_name field exists
+      // Normalize steps to ensure tool_name field exists (use 'tool')
       const normalizedSteps = input.plan.steps.map((step: any) => ({
-        ...step,
-        tool_name: step.tool_name || step.tool // Ensure tool_name is set
+        id: step.id,
+        name: step.name,
+        tool_name: step.tool,
+        parameters: step.parameters,
       }));
       
       const storedPlan: StoredPlan = {
@@ -72,8 +65,7 @@ class SavePlanTool extends MCPTool<{
 Steps: ${input.plan.steps.length}
 - ${input.plan.steps.map((step: any) => `${step.name} (${step.tool})`).join('\n- ')}
 
-Note: This is a tool execution planning system, not the MSA Saga pattern. 
-Each step has cancellation actions that you must execute manually when failures occur.`
+Note: This is a tool execution planning system, not the MSA Saga pattern.`
         }]
       };
     } catch (error) {

@@ -52,8 +52,7 @@ ${sagaStatus.steps.map((step: any, index: number) =>
 
       statusText += `\n\nNote: This is a tool execution planning system, not the MSA Saga pattern.
 - Monitor status continuously to detect failures
-- Handle failures manually by calling cancellation tools
-- Each step has defined cancellation actions for rollback`;
+- Handle failures manually (no automatic rollback)`;
 
       return {
         content: [{

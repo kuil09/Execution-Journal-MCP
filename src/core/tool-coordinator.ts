@@ -1,11 +1,4 @@
-export interface ToolExecutionOptions {
-  timeoutMs?: number;
-  retry?: {
-    maxAttempts: number;
-    backoff: 'linear' | 'exponential';
-    initialDelayMs?: number;
-  };
-}
+// No execution options in simplified model
 
 type ToolExecutor = (params: Record<string, any>) => Promise<any>;
 
@@ -28,46 +21,17 @@ class ToolCoordinator {
     return this.registry.has(toolName);
   }
 
-  async executeTool(toolName: string, parameters: Record<string, any>, options: ToolExecutionOptions = {}): Promise<any> {
-    const timeoutMs = options.timeoutMs ?? 30_000;
-    const retryCfg = options.retry ?? { maxAttempts: 1, backoff: 'linear', initialDelayMs: 300 };
-    const initialDelayMs = retryCfg.initialDelayMs ?? 300;
-
-    let attempt = 0;
-    let delay = initialDelayMs;
-
-    while (attempt < retryCfg.maxAttempts) {
-      attempt += 1;
-      try {
-        const execPromise = this.registry.has(toolName)
-          ? this.registry.get(toolName)!(parameters)
-          : this.mockInvoke(toolName, parameters);
-        const result = await this.runWithTimeout(execPromise, timeoutMs);
-        return { ok: true, attempt, result };
-      } catch (err) {
-        if (attempt >= retryCfg.maxAttempts) {
-          throw err;
-        }
-        await new Promise((r) => setTimeout(r, delay));
-        if (retryCfg.backoff === 'exponential') {
-          delay *= 2;
-        }
-      }
+  async executeTool(toolName: string, parameters: Record<string, any>): Promise<any> {
+    if (!this.registry.has(toolName)) {
+      throw new Error(`Tool not registered: ${toolName}`);
     }
-    return { ok: false };
+    const result = await this.registry.get(toolName)!(parameters);
+    return { ok: true, result };
   }
 
-  private async runWithTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Tool execution timeout')), timeoutMs)),
-    ]);
-  }
+  // No timeout handling in simplified model
 
-  private async mockInvoke(toolName: string, parameters: Record<string, any>): Promise<any> {
-    await new Promise((r) => setTimeout(r, 300));
-    return { tool: toolName, parameters, success: true };
-  }
+  // mockInvoke removed in simplified model
 }
 
 export const toolCoordinator = ToolCoordinator.getInstance();
