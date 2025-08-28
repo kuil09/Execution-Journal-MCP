@@ -29,6 +29,7 @@ class SavePlanTool extends MCPTool<{
           name: z.string().describe("Human-readable name for the step"),
           tool: z.string().describe("Tool to be called"),
           parameters: z.record(z.any()).describe("Parameters for the tool"),
+          cancellable: z.enum(["reversible", "partially-reversible", "irreversible"]).optional().describe("Whether and how this step can be cancelled (ledger use only)")
         })).describe("Array of steps to execute")
       }),
       description: "The plan object to save"
@@ -46,6 +47,7 @@ class SavePlanTool extends MCPTool<{
         name: step.name,
         tool_name: step.tool,
         parameters: step.parameters,
+        cancellable: step.cancellable ?? undefined,
       }));
       
       const storedPlan: StoredPlan = {

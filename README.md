@@ -1,38 +1,38 @@
-# Tool Execution Planning & Cancellation System
+# Tool Execution Planning (Ledger-first)
 
-A Model Context Protocol (MCP) server for managing tool call sequences with contextual dependencies. This system helps AI coordinate multiple tool calls and handle failures through manual cancellation actions.
+An MCP server that helps AI coordinate sequential tool calls and keep a ledger of decisions and compensations. The system does not execute rollbacks; it provides a durable memo pad.
 
 ## What This System Actually Does
 
 **This is NOT the MSA Saga pattern for distributed transactions.** Instead, this system manages "loose contextual connections" between tool calls. For example:
 
-- If a "travel booking" tool call fails, a "hat purchase" tool call that is contextually linked should also be cancelled
-- If a "database migration" fails, related "backup creation" and "notification sending" should be cancelled
-- The AI is responsible for detecting failures and manually invoking cancellation tools
+- If a "travel booking" tool call fails, a contextually linked next step should be stopped
+- If a "database migration" fails, related "backup creation" and "notification sending" should be reconsidered
+- The AI is responsible for detecting failures and manually deciding actions; the server records them (ledger)
 
-## Core Concept: Execution Support, Not Execution Guarantee
+## Core Concept: Execution Support, Not Execution Guarantee (Ledger)
 
 This system provides **execution support** for complex tool call sequences, not automatic execution guarantees. The AI must:
 
-- Design robust plans with proper cancellation strategies
-- Monitor execution status continuously
-- Handle failures manually by calling cancellation tools
+- Design sequential plans and declare which steps are cancellable
+- Monitor execution status
+- Handle failures manually and record actions using the ledger
 - Consider contextual dependencies between tool calls
 
 ## Available Tools
 
 ### Plan Management
-- **`save_plan`** - Save a tool execution plan with contextual dependencies
-- **`execute_plan`** - Execute a saved plan with optional configuration
+- **`save_plan`** - Save a sequential plan; each step may include `cancellable`
+- **`execute_plan`** - Execute a saved plan (sequential)
 
 ### Execution Control
 - **`status`** - Check execution status and progress
-- **`control`** - Pause, resume, or cancel executions
-- **`record_compensation`** - Log cancellation actions for audit trails
+- **`control`** - Cancel execution
+- **`record_compensation`** - Append a ledger event about manual compensation/cancellation
 
 ## Usage Examples
 
-### 1. Save a Travel Planning Plan
+### 1. Save a Travel Planning Plan (with cancellability)
 ```json
 {
   "plan": {
@@ -44,20 +44,14 @@ This system provides **execution support** for complex tool call sequences, not 
         "name": "Book Hotel",
         "tool": "book_hotel",
         "parameters": {"destination": "Paris", "dates": "2024-07-15 to 2024-07-22"},
-        "cancellation": {
-          "tool": "cancel_hotel",
-          "parameters": {"booking_id": "{{hotel_booking_id}}"}
-        }
+        "cancellable": "partially-reversible"
       },
       {
         "id": "book_car",
         "name": "Book Rental Car",
         "tool": "book_car",
         "parameters": {"pickup_location": "Paris Airport", "dates": "2024-07-15 to 2024-07-22"},
-        "cancellation": {
-          "tool": "cancel_car",
-          "parameters": {"booking_id": "{{car_booking_id}}"}
-        }
+        "cancellable": "reversible"
       }
     ]
   }
@@ -67,12 +61,7 @@ This system provides **execution support** for complex tool call sequences, not 
 ### 2. Execute the Plan
 ```json
 {
-  "plan_id": "plan_abc123",
-  "execution_options": {
-    "concurrency": 1,
-    "timeout": 30000,
-    "pause_on_error": true
-  }
+  "plan_id": "plan_abc123"
 }
 ```
 
@@ -87,18 +76,18 @@ This system provides **execution support** for complex tool call sequences, not 
 ### 4. Control Execution
 ```json
 {
-  "action": "pause",
+  "action": "cancel",
   "execution_id": "exec_xyz789"
 }
 ```
 
-### 5. Record Cancellation
+### 5. Record Cancellation (Ledger)
 ```json
 {
   "execution_id": "exec_xyz789",
   "step_id": "book_hotel",
   "reason": "Hotel unavailable for requested dates",
-  "action_taken": "Cancelled hotel booking via cancel_hotel tool",
+  "action_taken": "Cancelled booking (manual via vendor portal)",
   "details": {"alternative_dates": "2024-08-01 to 2024-08-08"}
 }
 ```
@@ -160,11 +149,10 @@ Add this to your MCP client configuration:
 
 ## Key Features
 
-- **Contextual Dependencies**: Manage relationships between tool calls
-- **Manual Cancellation**: AI-driven failure handling and rollback
-- **Execution Monitoring**: Real-time status tracking and control
-- **Audit Trail**: Comprehensive logging of all actions and cancellations
-- **Flexible Planning**: Support for complex, multi-step workflows
+- **Simple Sequential Execution**
+- **Cancellability Metadata** per step (reversible/partially-reversible/irreversible)
+- **Execution Monitoring**: Status tracking
+- **Ledger**: Durable record of manual compensations/cancellations
 
 ## Important Notes
 
@@ -178,9 +166,7 @@ Add this to your MCP client configuration:
 - ✅ Core tools implemented
 - ✅ MCP prompts and resources
 - ✅ Basic execution framework
-- 🔄 Database integration (in progress)
-- 🔄 Advanced DAG execution (planned)
-- 🔄 Parallel execution support (planned)
+- ✅ Database-backed ledger events
 
 ## Contributing
 

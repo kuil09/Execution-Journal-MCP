@@ -67,4 +67,11 @@ export class SagaRepository {
     const steps = this.db.prepare(`SELECT * FROM saga_steps WHERE saga_id = ? ORDER BY rowid ASC`).all(id) as SagaStepRow[];
     return { instance, steps };
   }
+
+  insertEvent(event: { saga_id: string; event_type: string; timestamp?: string; data_json?: string; event_id?: string }): void {
+    const ts = event.timestamp ?? new Date().toISOString();
+    const id = event.event_id ?? `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+    this.db.prepare(`INSERT INTO saga_events (event_id, saga_id, event_type, timestamp, data_json) VALUES (?, ?, ?, ?, ?)`)
+      .run(id, event.saga_id, event.event_type, ts, event.data_json ?? null);
+  }
 }

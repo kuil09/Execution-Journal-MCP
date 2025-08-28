@@ -1,5 +1,6 @@
 import { MCPTool } from "mcp-framework";
 import { z } from "zod";
+import { SagaRepository } from "../storage/saga-repository.js";
 
 class RecordCompensationTool extends MCPTool<{
   execution_id: string;
@@ -10,6 +11,7 @@ class RecordCompensationTool extends MCPTool<{
 }> {
   name = "record_compensation";
   description = "Record a cancellation action that was performed manually";
+  private sagaRepo = new SagaRepository();
 
   schema = {
     execution_id: {
@@ -38,6 +40,18 @@ class RecordCompensationTool extends MCPTool<{
     try {
       const timestamp = new Date().toISOString();
       const compensationId = `comp_${Date.now().toString(36)}`;
+      // Persist as ledger event
+      this.sagaRepo.insertEvent({
+        saga_id: input.execution_id,
+        event_type: "compensation",
+        timestamp,
+        data_json: JSON.stringify({
+          step_id: input.step_id,
+          reason: input.reason,
+          action_taken: input.action_taken,
+          details: input.details ?? null
+        })
+      });
       
       const resultText = `Cancellation action recorded successfully!
 
@@ -49,10 +63,8 @@ Action Taken: ${input.action_taken}
 Timestamp: ${timestamp}
 ${input.details ? `Details: ${JSON.stringify(input.details, null, 2)}` : ''}
 
-Note: This is a tool execution planning system, not the MSA Saga pattern.
-- Cancellation actions are recorded but not automatically executed
-- You must manually invoke cancellation tools when failures occur
-- This tool helps track what was cancelled and why
+Note: This system provides a ledger. It does not execute cancellations.
+- You (AI) decide and perform cancellations; we store the record
 - Use this information for audit trails and debugging
 
 Remember: Always consider contextual dependencies when cancelling operations.
