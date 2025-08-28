@@ -12,6 +12,7 @@ An MCP server that helps AI coordinate sequential tool calls and maintain a comp
 - **Action Journal**: Record manual actions taken for audit trails
 - **Contextual Awareness**: Understand relationships between tool calls
 - **Failure Policies**: Define how failures in one step affect other steps
+- **History Management**: Query and clean up execution history
 
 ## Core Concept
 
@@ -24,9 +25,13 @@ This system acts as a **durable memo pad** for AI actions and decisions. It does
 - **`record_execution_start`** - Start executing a plan and track progress
 
 ### Execution Control
-- **`query_ledger`** - Check execution status, progress, and history
+- **`query_ledger`** - Check execution status, progress, and history for a specific execution
+- **`query_history`** - Query execution history with comprehensive filtering and pagination
 - **`record_decision`** - Log decisions made during execution (stop/continue)
 - **`record_action`** - Record manual actions taken for audit purposes
+
+### History Management
+- **`cleanup_history`** - Clean up old and completed execution history to free up space
 
 ## Usage Examples
 
@@ -81,7 +86,26 @@ This system acts as a **durable memo pad** for AI actions and decisions. It does
 }
 ```
 
-### 4. Record Decisions and Actions
+### 4. Query History
+```json
+{
+  "query_type": "recent",
+  "limit": 10,
+  "include_plans": true,
+  "include_step_details": false
+}
+```
+
+### 5. Clean Up History
+```json
+{
+  "cleanup_type": "completed_old",
+  "older_than_days": 30,
+  "dry_run": true
+}
+```
+
+### 6. Record Decisions and Actions
 ```json
 {
   "execution_id": "exec_xyz789",
@@ -98,8 +122,10 @@ src/
 │   ├── RecordPlanTool.ts     # Plan creation
 │   ├── RecordExecutionStartTool.ts   # Execution start
 │   ├── QueryLedgerTool.ts    # Status monitoring
+│   ├── QueryHistoryTool.ts   # History querying
 │   ├── RecordDecisionTool.ts # Decision logging
-│   └── RecordActionTool.ts   # Action recording
+│   ├── RecordActionTool.ts   # Action recording
+│   └── CleanupHistoryTool.ts # History cleanup
 ├── prompts/                  # AI guidance
 │   └── ExecutionPlanningPrompt.ts
 ├── resources/                # Documentation and examples
@@ -152,6 +178,7 @@ Add this to your MCP client configuration:
 - **Failure Policies**: Define how failures propagate to other steps
 - **Comprehensive Journaling**: All decisions and actions are recorded
 - **Execution Monitoring**: Real-time status tracking
+- **History Management**: Query and clean up execution history
 - **Audit Trail**: Complete history for compliance and debugging
 
 ## Cancellability Levels
@@ -167,6 +194,21 @@ Add this to your MCP client configuration:
 - **`continue_others`**: Continue with other steps even if this fails
 - **`manual_decision`**: Require manual decision on how to proceed
 
+## History Query Types
+
+- **`recent`**: Most recently updated executions
+- **`incomplete`**: Pending or running executions
+- **`failed`**: Failed or cancelled executions
+- **`completed`**: Successfully completed executions
+- **`all`**: All executions with pagination
+
+## Cleanup Options
+
+- **`completed_old`**: Remove old completed executions
+- **`failed_old`**: Remove old failed executions
+- **`orphaned_plans`**: Remove plans with no executions
+- **`all_old`**: Remove all old items
+
 ## Best Practices
 
 1. **Plan Design**: Keep steps focused and consider failure scenarios
@@ -175,6 +217,7 @@ Add this to your MCP client configuration:
 4. **Decision Recording**: Log all decisions promptly
 5. **Action Documentation**: Record what was done and why
 6. **Context Awareness**: Understand how tool failures affect related operations
+7. **History Management**: Regularly clean up old data to maintain performance
 
 ## Development Status
 
@@ -182,6 +225,7 @@ Add this to your MCP client configuration:
 - ✅ MCP integration complete
 - ✅ Database-backed journaling
 - ✅ Failure policy support
+- ✅ History management tools
 - ✅ Comprehensive documentation
 
 ## Contributing
